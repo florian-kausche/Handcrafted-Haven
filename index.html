@@ -1,0 +1,242 @@
+cd "c:\Users\Moandemah Foundation\Desktop\new school\WDD430\Handcrafted-Haven"
+npm run dev<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Handcrafted Haven</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <img src="assets/logo.svg" alt="Handcrafted Haven logo" class="logo">
+        <span class="brand-name">Handcrafted Haven</span>
+      </div>
+      <nav class="main-nav">
+        <a href="#">Home</a>
+        <a href="#">Shop</a>
+        <a href="#">About</a>
+        <a href="#">Community</a>
+      </nav>
+      <div class="header-actions">
+        <div class="search">
+          <input type="search" placeholder="Search handmade treasures...">
+        </div>
+        <div class="icons">
+          <button class="icon-btn">🔔</button>
+          <button class="icon-btn">🛒</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-left">
+          <div class="kicker">Handmade with Love</div>
+          <h1>Discover Unique Handcrafted Treasures</h1>
+          <p class="lead">Support local artisans and bring authentic, sustainable craftsmanship into your home. Every purchase tells a story and supports a creator’s passion.</p>
+          <div class="hero-cta">
+            <a class="btn primary" href="#">Shop Now</a>
+            <a class="btn outline" href="#">Become a Seller</a>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-card">
+            <img src="assets/hero-toolbox.svg" alt="toolbox" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container features-inner">
+        <div class="feature">
+          <div class="feature-icon">🧑‍🎨</div>
+          <h4>Support Artisans</h4>
+          <p>Every purchase directly supports independent makers and their craft.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🛡️</div>
+          <h4>Quality Guaranteed</h4>
+          <p>Each item is carefully curated and crafted with attention to detail.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🌱</div>
+          <h4>Sustainable Choice</h4>
+          <p>Eco-friendly materials and practices for a better tomorrow.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="featured-creations">
+      <div class="container">
+        <div class="section-head">
+          <h2>Featured Creations</h2>
+          <p class="muted">Handpicked treasures from our talented community</p>
+          <a class="view-all" href="#">View All</a>
+        </div>
+
+        <div class="products-grid">
+          <!-- Product card template -->
+          <article class="product-card">
+            <div class="ribbon">Featured</div>
+            <img src="assets/product-1.svg" alt="Product 1">
+            <div class="product-body">
+              <h3>Handcrafted Ceramic Bowl Set</h3>
+              <p class="by">by Sarah Martinez</p>
+              <div class="meta">
+                <div class="price">$89.99</div>
+                <button class="btn small">Add</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <div class="ribbon">Featured</div>
+            <img src="assets/product-2.svg" alt="Product 2">
+            <div class="product-body">
+              <h3>Artisan Woven Basket</h3>
+              <p class="by">by Maria Chen</p>
+              <div class="meta">
+                <div class="price">$65.00</div>
+                <button class="btn small">Add</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <img src="assets/product-3.svg" alt="Product 3">
+            <div class="product-body">
+              <h3>Handmade Silver Necklace</h3>
+              <p class="by">by Emma Thompson</p>
+              <div class="meta">
+                <div class="price">$125.00</div>
+                <button class="btn small">Add</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <img src="assets/product-4.svg" alt="Product 4">
+            <div class="product-body">
+              <h3>Wooden Serving Bowls</h3>
+              <p class="by">by James Walker</p>
+              <div class="meta">
+                <div class="price">$78.50</div>
+                <button class="btn small">Add</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <img src="assets/product-5.svg" alt="Product 5">
+            <div class="product-body">
+              <h3>Natural Soy Candle Set</h3>
+              <p class="by">by Olivia Reed</p>
+              <div class="meta">
+                <div class="price">$42.00</div>
+                <button class="btn small">Add</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <img src="assets/product-6.svg" alt="Product 6">
+            <div class="product-body">
+              <h3>Leather Journal Cover</h3>
+              <p class="by">by Michael Scott</p>
+              <div class="meta">
+                <div class="price">$95.00</div>
+                <button class="btn small">Add</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="artisans">
+      <div class="container">
+        <div class="section-head center">
+          <h2>Meet Our Artisans</h2>
+          <p class="muted">Get to know the talented makers behind the crafts. Each artisan brings their unique story, skill, and passion to every creation.</p>
+        </div>
+
+        <div class="artist-grid">
+          <div class="artist-card">
+            <img class="avatar" src="assets/avatar-1.svg" alt="Sarah Martinez">
+            <h4>Sarah Martinez</h4>
+            <p class="role">Pottery & Ceramics • Portland, OR</p>
+            <p class="bio">Creating functional art with clay for over 16 years. Each piece is hand-thrown and uniquely glazed.</p>
+          </div>
+
+          <div class="artist-card">
+            <img class="avatar" src="assets/avatar-2.svg" alt="Maria Chen">
+            <h4>Maria Chen</h4>
+            <p class="role">Textile Weaving • Santa Fe, NM</p>
+            <p class="bio">Traditional weaving techniques passed down through generations, creating modern heirloom pieces.</p>
+          </div>
+
+          <div class="artist-card">
+            <img class="avatar" src="assets/avatar-3.svg" alt="James Walker">
+            <h4>James Walker</h4>
+            <p class="role">Woodworking • Asheville, NC</p>
+            <p class="bio">Sustainable woodworking using locally sourced materials to create timeless kitchen essentials.</p>
+          </div>
+        </div>
+
+        <div class="center"><a class="btn outline" href="#">Discover More Stories</a></div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container cta-inner">
+        <h2>Are You an Artisan?</h2>
+        <p class="lead muted">Join our community of talented makers. Share your craft with the world and connect with customers who value handmade quality.</p>
+        <a class="btn primary dark" href="#">Start Selling Today</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <img src="assets/logo.svg" alt="logo" class="logo small">
+        <p class="muted">Supporting local artisans and sustainable craftsmanship since 2020.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li>All Products</li>
+          <li>Pottery & Ceramics</li>
+          <li>Jewelry</li>
+          <li>Textiles & Weaving</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li>About Us</li>
+          <li>Contact</li>
+          <li>Shipping & Returns</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Stay Connected</h4>
+        <p class="muted">Subscribe to discover new artisans and exclusive offers.</p>
+        <form class="newsletter" onsubmit="event.preventDefault();alert('Thanks!')">
+          <input placeholder="Your email" aria-label="email">
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+    </div>
+    <div class="copyright">© 2025 Handcrafted Haven. All rights reserved.</div>
+  </footer>
+
+</body>
+</html>
