@@ -1,7 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Head from 'next/head'
 
-const SAMPLE_PRODUCTS = [
+interface Product {
+  id: number
+  title: string
+  price: number
+  image: string
+  featured: boolean
+  description: string
+}
+
+interface CartItem {
+  id: number
+  title: string
+  price: number
+  qty: number
+}
+
+type SelectedItem = Product | { cartOpen: true } | null
+
+const SAMPLE_PRODUCTS: Product[] = [
   { id: 1, title: 'Ceramic Vase', price: 48, image: '/assets/product-1.svg', featured: true, description: 'Hand-thrown ceramic vase with reactive glaze.' },
   { id: 2, title: 'Woven Basket', price: 36, image: '/assets/product-2.svg', featured: true, description: 'Handwoven storage basket using natural fibers.' },
   { id: 3, title: 'Leather Pouch', price: 60, image: '/assets/product-3.svg', featured: false, description: 'Vegetable-tanned leather pouch, stitched by hand.' },
@@ -12,8 +30,8 @@ const SAMPLE_PRODUCTS = [
 
 export default function Home() {
   const [query, setQuery] = useState('')
-  const [cart, setCart] = useState([])
-  const [selected, setSelected] = useState(null) // product shown in modal
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [selected, setSelected] = useState<SelectedItem>(null) // product shown in modal
   const [mobileOpen, setMobileOpen] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
 
@@ -21,7 +39,10 @@ export default function Home() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem('hh_cart')
-      if (raw) setCart(JSON.parse(raw))
+      if (raw) {
+        const parsed = JSON.parse(raw) as CartItem[]
+        setCart(parsed)
+      }
     } catch (e) {
       // ignore
     }
@@ -41,7 +62,7 @@ export default function Home() {
 
   const cartCount = cart.reduce((s, item) => s + item.qty, 0)
 
-  function addToCart(product, qty = 1) {
+  function addToCart(product: Product, qty = 1) {
     setCart(prev => {
       const found = prev.find(i => i.id === product.id)
       if (found) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + qty } : i)
@@ -49,7 +70,7 @@ export default function Home() {
     })
   }
 
-  function removeFromCart(id) {
+  function removeFromCart(id: number) {
     setCart(prev => prev.filter(i => i.id !== id))
   }
 
@@ -57,10 +78,10 @@ export default function Home() {
     setCart([])
   }
 
-  function handleSubscribe(e) {
+  function handleSubscribe(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const form = e.target
-    const email = form.elements[0].value
+    const form = e.currentTarget
+    const email = (form.elements[0] as HTMLInputElement).value
     if (!email || !email.includes('@')) {
       alert('Please enter a valid email')
       return
@@ -113,7 +134,7 @@ export default function Home() {
             <div className="hero-left">
               <div className="kicker">Handmade with Love</div>
               <h1>Discover Unique Handcrafted Treasures</h1>
-              <p className="lead">Support local artisans and bring authentic, sustainable craftsmanship into your home. Every purchase tells a story and supports a creator’s passion.</p>
+              <p className="lead">Support local artisans and bring authentic, sustainable craftsmanship into your home. Every purchase tells a story and supports a creator's passion.</p>
               <div className="hero-cta">
                 <button className="btn primary" onClick={() => { const p = SAMPLE_PRODUCTS[0]; setSelected(p) }}>Shop Now</button>
                 <a className="btn outline" href="#">Become a Seller</a>
@@ -253,7 +274,7 @@ export default function Home() {
       </footer>
 
       {/* Product / cart modal */}
-      {selected && selected.cartOpen && (
+      {selected && 'cartOpen' in selected && selected.cartOpen && (
         <div className="modal" role="dialog" aria-modal="true">
           <div className="modal-inner container">
             <h3>Your Cart</h3>
@@ -280,7 +301,7 @@ export default function Home() {
         </div>
       )}
 
-      {selected && selected.id && (
+      {selected && 'id' in selected && selected.id && (
         <div className="modal" role="dialog" aria-modal="true">
           <div className="modal-inner container">
             <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
@@ -310,3 +331,5 @@ export default function Home() {
     </>
   )
 }
+
+
