@@ -62,6 +62,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       await refreshCart()
     } catch (error) {
       console.error('Failed to add item:', error)
+      alert('Failed to add item to cart. Please try again.')
       throw error
     }
   }
@@ -72,6 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       await refreshCart()
     } catch (error) {
       console.error('Failed to remove item:', error)
+      alert('Failed to remove item from cart. Please try again.')
       throw error
     }
   }
