@@ -1,23 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool from '../../../lib/db'
 import { hashPassword, generateToken, setAuthCookie } from '../../../lib/auth'
-import { initDatabase } from '../../../lib/db'
-
-let dbInitialized = false
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
-  }
-
-  // Initialize database on first request
-  if (!dbInitialized) {
-    try {
-      await initDatabase()
-      dbInitialized = true
-    } catch (error) {
-      console.error('Database initialization error:', error)
-    }
   }
 
   try {

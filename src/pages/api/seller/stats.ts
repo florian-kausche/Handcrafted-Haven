@@ -1,21 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool from '../../../lib/db'
 import { getCurrentUser } from '../../../lib/auth'
-import { initDatabase } from '../../../lib/db'
-
-let dbInitialized = false
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Initialize database on first request
-  if (!dbInitialized) {
-    try {
-      await initDatabase()
-      dbInitialized = true
-    } catch (error) {
-      console.error('Database initialization error:', error)
-    }
-  }
-
   const user = await getCurrentUser(req)
   if (!user || user.role !== 'artisan') {
     return res.status(401).json({ error: 'Unauthorized' })

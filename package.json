@@ -6,7 +6,9 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "db:init": "ts-node scripts/init-db.ts",
+        "db:seed": "ts-node scripts/seed-db.ts"
     },
     "dependencies": {
         "@types/bcryptjs": "^2.4.6",
@@ -24,6 +26,7 @@
         "@types/react": "^19.2.6",
         "@types/react-dom": "^19.2.3",
         "eslint": "^9.39.1",
+        "ts-node": "^10.9.2",
         "typescript": "^5.9.3"
     }
 }
