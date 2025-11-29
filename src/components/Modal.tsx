@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import Image from 'next/image'
 
 interface CartItem {
   id: number
@@ -124,9 +125,11 @@ export default function Modal({
         {type === 'product' && product && (
           <div className="product-modal">
             <div className="product-modal-image">
-              <img 
-                src={product.image} 
-                alt={product.title} 
+              <Image
+                src={product.image}
+                alt={product.title}
+                width={600}
+                height={600}
                 className="product-image-large"
               />
             </div>

@@ -1,13 +1,37 @@
 import { Pool } from 'pg'
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'handcrafted_haven',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '',
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-})
+// Try to initialize a real Postgres pool, but fall back to a harmless mock when
+// DB connection settings are not provided or initialization fails. This prevents
+// the dev server from crashing when running without a database.
+let pool: any
+try {
+  const hasDbConfig = !!(process.env.DB_HOST || process.env.DB_USER || process.env.DB_NAME)
+  if (!hasDbConfig) throw new Error('DB not configured')
+
+  pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'handcrafted_haven',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  })
+
+  // Prevent unhandled 'error' events from crashing the dev server when DB is not available
+  pool.on('error', (err: Error) => {
+    console.error('Unexpected idle client error on Postgres pool:', err)
+  })
+} catch (err) {
+  console.warn('Postgres pool not initialized, using mock pool. Reason:', (err as Error).message)
+  // Minimal mock pool that provides `query` and `connect` to avoid errors.
+  pool = {
+    query: async (_query: string, _params?: any[]) => ({ rows: [] }),
+    connect: async () => ({
+      query: async () => ({ rows: [] }),
+      release: () => {},
+    }),
+  }
+}
 
 export default pool
 

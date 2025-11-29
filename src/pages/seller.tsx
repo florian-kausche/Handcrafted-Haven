@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -193,7 +194,7 @@ export default function Seller() {
                       type="text"
                       value={formData.image_url}
                       onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      placeholder="/assets/product-1.svg"
+                      placeholder="/assets/product-1.jpeg"
                       style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '8px' }}
                     />
                   </div>
@@ -224,7 +225,7 @@ export default function Seller() {
                 {products.map((product) => (
                   <div key={product.id} style={{ background: 'var(--bg)', padding: '16px', borderRadius: '8px', position: 'relative' }}>
                     <Link href={`/product/${product.id}`}>
-                      <img src={product.image_url || '/assets/product-1.svg'} alt={product.title} style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', cursor: 'pointer' }} />
+                      <Image src={product.image_url || '/assets/product-1.jpeg'} alt={product.title} width={400} height={280} style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', cursor: 'pointer' } as React.CSSProperties} />
                     </Link>
                     <h3>{product.title}</h3>
                     <p style={{ fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>${parseFloat(product.price).toFixed(2)}</p>

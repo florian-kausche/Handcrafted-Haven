@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useAuth } from '../contexts/AuthContext'
@@ -27,10 +28,12 @@ export default function Header() {
     <header className="site-header">
       <div className="container header-inner">
         <div className="brand">
-          <img 
-            src="https://images.unsplash.com/photo-1517841964259-22a8a8174548?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-            alt="Handcrafted Haven logo" 
-            className="logo" 
+          <Image
+            src="/assets/logo.png"
+            alt="Handcrafted Haven logo"
+            className="logo"
+            width={48}
+            height={48}
           />
           <span className="brand-name">Handcrafted Haven</span>
         </div>

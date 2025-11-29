@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface FooterProps {
   onSubscribe: (e: React.FormEvent<HTMLFormElement>) => void
@@ -11,10 +12,12 @@ export default function Footer({ onSubscribe, subscribed }: FooterProps) {
     <footer className="site-footer">
       <div className="container footer-inner">
         <div className="footer-col">
-          <img 
-            src="https://images.unsplash.com/photo-1517841964259-22a8a8174548?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-            alt="Handcrafted Haven logo" 
-            className="logo small" 
+          <Image
+            src="/assets/logo.png"
+            alt="Handcrafted Haven logo"
+            width={48}
+            height={48}
+            className="logo small"
           />
           <p className="muted">Supporting local artisans and sustainable craftsmanship since 2020.</p>
           <div className="social-icons">

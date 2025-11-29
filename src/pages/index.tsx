@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -28,12 +29,12 @@ interface CartItem {
 }
 
 const SAMPLE_PRODUCTS: Product[] = [
-  { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: 89.99, image: '/assets/product-1.svg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisanName: 'Sarah Martinez' },
-  { id: 2, title: 'Artisan Woven Basket', price: 65.00, image: '/assets/product-2.svg', featured: true, description: 'Handwoven storage basket using natural fibers.', rating: 5, artisanName: 'Maria Chen' },
-  { id: 3, title: 'Handmade Silver Necklace', price: 120.00, image: '/assets/product-3.svg', featured: false, description: 'Handcrafted silver necklace with unique stone setting.', rating: 4.5, artisanName: 'Emma Thompson' },
-  { id: 4, title: 'Wooden Serving Bowls', price: 75.00, image: '/assets/product-4.svg', featured: false, description: 'Turned wooden serving bowls finished with food-safe oil.', rating: 5, artisanName: 'James Walker' },
-  { id: 5, title: 'Natural Soy Candle Set', price: 45.00, image: '/assets/product-5.svg', featured: false, description: 'Hand-poured soy candles with natural fragrances.', rating: 4.5, artisanName: 'Lisa Anderson' },
-  { id: 6, title: 'Leather Journal Cover', price: 55.00, image: '/assets/product-6.svg', featured: false, description: 'Vegetable-tanned leather journal cover, stitched by hand.', rating: 5, artisanName: 'Michael Brown' }
+  { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: 89.99, image: '/assets/product-1.jpeg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisanName: 'Sarah Martinez' },
+  { id: 2, title: 'Artisan Woven Basket', price: 65.00, image: '/assets/product-2.jpeg', featured: true, description: 'Handwoven storage basket using natural fibers.', rating: 5, artisanName: 'Maria Chen' },
+  { id: 3, title: 'Handmade Silver Necklace', price: 120.00, image: '/assets/product-3.jpeg', featured: false, description: 'Handcrafted silver necklace with unique stone setting.', rating: 4.5, artisanName: 'Emma Thompson' },
+  { id: 4, title: 'Wooden Serving Bowls', price: 75.00, image: '/assets/product-4.png', featured: false, description: 'Turned wooden serving bowls finished with food-safe oil.', rating: 5, artisanName: 'James Walker' },
+  { id: 5, title: 'Natural Soy Candle Set', price: 45.00, image: '/assets/product-5.png', featured: false, description: 'Hand-poured soy candles with natural fragrances.', rating: 4.5, artisanName: 'Lisa Anderson' },
+  { id: 6, title: 'Leather Journal Cover', price: 55.00, image: '/assets/product-6.png', featured: false, description: 'Vegetable-tanned leather journal cover, stitched by hand.', rating: 5, artisanName: 'Michael Brown' }
 ]
 
 export default function Home() {
@@ -57,7 +58,7 @@ export default function Home() {
           id: p.id,
           title: p.title,
           price: parseFloat(p.price),
-          image: p.image_url || '/assets/product-1.svg',
+          image: p.image_url || '/assets/product-1.jpeg',
           featured: p.featured,
           description: p.description,
           rating: p.rating || 5,
@@ -138,9 +139,12 @@ export default function Home() {
             </div>
             <div className="hero-right">
               <div className="hero-card">
-                <img 
-                  src="/assets/hero-toolbox.svg" 
-                  alt="Handcrafted tools and materials" 
+                <Image
+                  src="/assets/hero-toolbox.svg"
+                  alt="Handcrafted tools and materials"
+                  width={520}
+                  height={360}
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
             </div>
@@ -226,10 +230,12 @@ export default function Home() {
 
             <div className="artist-grid">
               <div className="artist-card">
-                <img 
-                  className="avatar" 
-                  src="/assets/avatar-1.svg" 
-                  alt="Sarah Martinez" 
+                <Image
+                  className="avatar"
+                  src="/assets/avatar-1.jpeg"
+                  alt="Sarah Martinez"
+                  width={64}
+                  height={64}
                 />
                 <div className="artist-rating">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -245,10 +251,12 @@ export default function Home() {
               </div>
 
               <div className="artist-card">
-                <img 
-                  className="avatar" 
-                  src="/assets/avatar-2.svg" 
-                  alt="Maria Chen" 
+                <Image
+                  className="avatar"
+                  src="/assets/avatar-2.jpeg"
+                  alt="Maria Chen"
+                  width={64}
+                  height={64}
                 />
                 <div className="artist-rating">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -264,10 +272,12 @@ export default function Home() {
               </div>
 
               <div className="artist-card">
-                <img 
-                  className="avatar" 
-                  src="/assets/avatar-3.svg" 
-                  alt="James Walker" 
+                <Image
+                  className="avatar"
+                  src="/assets/avatar-3.svg"
+                  alt="James Walker"
+                  width={64}
+                  height={64}
                 />
                 <div className="artist-rating">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Image from 'next/image'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -93,10 +94,12 @@ export default function Cart() {
                       marginBottom: '20px',
                     }}
                   >
-                    <img
-                      src={item.image_url || '/assets/product-1.svg'}
+                    <Image
+                      src={item.image_url || '/assets/product-1.jpeg'}
                       alt={item.title}
-                      style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px' }}
+                      width={120}
+                      height={120}
+                      style={{ objectFit: 'cover', borderRadius: '8px' } as React.CSSProperties}
                     />
                     <div style={{ flex: 1 }}>
                       <h3 style={{ marginBottom: '8px' }}>{item.title}</h3>

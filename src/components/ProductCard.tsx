@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 interface Product {
   id: number
@@ -22,11 +23,13 @@ export default function ProductCard({ product, onSelect, onAddToCart }: ProductC
     <article className="product-card">
       {product.featured && <div className="ribbon">Featured</div>}
       <div className="product-image-wrapper" onClick={() => onSelect(product)}>
-        <img 
-          src={product.image} 
-          alt={product.title} 
+        <Image
+          src={product.image}
+          alt={product.title}
           className="product-image"
-          loading="lazy"
+          width={360}
+          height={240}
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
       </div>
       <div className="product-body">

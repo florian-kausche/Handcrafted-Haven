@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Header from '../../components/Header'
@@ -114,10 +115,12 @@ export default function ProductDetail() {
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', marginBottom: '60px' }}>
             <div>
-              <img
-                src={product.image_url || '/assets/product-1.svg'}
+              <Image
+                src={product.image_url || '/assets/product-1.jpeg'}
                 alt={product.title}
-                style={{ width: '100%', borderRadius: '16px', objectFit: 'cover' }}
+                width={800}
+                height={560}
+                style={{ width: '100%', borderRadius: '16px', objectFit: 'cover' } as React.CSSProperties}
               />
             </div>
             <div>

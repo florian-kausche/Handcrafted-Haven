@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import Head from 'next/head'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
@@ -20,6 +21,16 @@ export default function About() {
           <p style={{ fontSize: '18px', lineHeight: '1.8', color: 'var(--muted)', marginBottom: '40px', textAlign: 'center' }}>
             Supporting local artisans and sustainable craftsmanship since 2020
           </p>
+
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <Image
+              src="/assets/hero-toolbox.svg"
+              alt="Handcrafted tools"
+              width={720}
+              height={480}
+              style={{ maxWidth: '100%', height: 'auto' }}
+            />
+          </div>
 
           <div style={{ marginBottom: '60px' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', marginBottom: '20px' }}>Our Mission</h2>
@@ -67,6 +78,28 @@ export default function About() {
               <a href="/shop" className="btn outline">
                 Browse Products
               </a>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '40px' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>Our Makers & Creations</h2>
+            <p style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: '20px' }}>
+              A few faces and pieces from our community.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
+              <Image src="/assets/avatar-1.jpeg" alt="Maker 1" width={64} height={64} />
+              <Image src="/assets/avatar-2.jpeg" alt="Maker 2" width={64} height={64} />
+              <Image src="/assets/avatar-3.svg" alt="Maker 3" width={64} height={64} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px' }}>
+              <Image src="/assets/product-1.jpeg" alt="Product 1" width={240} height={160} />
+              <Image src="/assets/product-2.jpeg" alt="Product 2" width={240} height={160} />
+              <Image src="/assets/product-3.jpeg" alt="Product 3" width={240} height={160} />
+              <Image src="/assets/product-4.png" alt="Product 4" width={240} height={160} />
+              <Image src="/assets/product-5.png" alt="Product 5" width={240} height={160} />
+              <Image src="/assets/product-6.png" alt="Product 6" width={240} height={160} />
             </div>
           </div>
         </div>
