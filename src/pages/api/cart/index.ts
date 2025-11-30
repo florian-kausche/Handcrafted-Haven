@@ -1,112 +1,56 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool from '../../../lib/db'
 import { getCurrentUser } from '../../../lib/auth'
+import connectMongoose from '../../../lib/mongoose'
+import CartItem from '../../../models/CartItem'
+import Product from '../../../models/Product'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await getCurrentUser(req)
-  if (!user) {
-    return res.status(401).json({ error: 'Not authenticated' })
-  }
+  if (!user) return res.status(401).json({ error: 'Not authenticated' })
 
-  if (req.method === 'GET') {
-    try {
-      const result = await pool.query(
-        `SELECT 
-          ci.*,
-          p.title,
-          p.price,
-          p.image_url,
-          p.stock_quantity
-        FROM cart_items ci
-        JOIN products p ON ci.product_id = p.id
-        WHERE ci.user_id = $1
-        ORDER BY ci.created_at DESC`,
-        [user.id]
-      )
+  await connectMongoose()
 
-      res.status(200).json({ items: result.rows })
-    } catch (error) {
-      console.error('Cart fetch error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+  const userId = user.id
+
+  try {
+    if (req.method === 'GET') {
+      const items = await CartItem.find({ user: userId }).populate('product').sort({ createdAt: -1 }).lean()
+      const normalized = items.map((it: any) => ({ id: it._id, quantity: it.quantity, product: { id: it.product._id, title: it.product.title, price: it.product.price, image: (it.product.images && it.product.images[0]?.url) || it.product.image_url || '/assets/product-1.jpeg', stock_quantity: it.product.stock_quantity } }))
+      return res.status(200).json({ items: normalized })
     }
-  } else if (req.method === 'POST') {
-    try {
+
+    if (req.method === 'POST') {
       const { productId, quantity } = req.body
+      if (!productId || !quantity) return res.status(400).json({ error: 'Product ID and quantity are required' })
 
-      if (!productId || !quantity) {
-        return res.status(400).json({ error: 'Product ID and quantity are required' })
-      }
-
-      // Check if item already in cart
-      const existing = await pool.query(
-        'SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2',
-        [user.id, productId]
-      )
-
-      if (existing.rows.length > 0) {
-        // Update quantity
-        await pool.query(
-          'UPDATE cart_items SET quantity = quantity + $1 WHERE id = $2',
-          [quantity, existing.rows[0].id]
-        )
-      } else {
-        // Add new item
-        await pool.query(
-          'INSERT INTO cart_items (user_id, product_id, quantity) VALUES ($1, $2, $3)',
-          [user.id, productId, quantity]
-        )
-      }
-
-      res.status(200).json({ message: 'Item added to cart' })
-    } catch (error) {
-      console.error('Cart add error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      // Upsert cart item
+      await CartItem.findOneAndUpdate({ user: userId, product: productId }, { $inc: { quantity: quantity } }, { upsert: true })
+      return res.status(200).json({ message: 'Item added to cart' })
     }
-  } else if (req.method === 'PUT') {
-    try {
-      const { productId, quantity } = req.body
 
-      if (!productId || quantity === undefined) {
-        return res.status(400).json({ error: 'Product ID and quantity are required' })
-      }
+    if (req.method === 'PUT') {
+      const { productId, quantity } = req.body
+      if (!productId || quantity === undefined) return res.status(400).json({ error: 'Product ID and quantity are required' })
 
       if (quantity <= 0) {
-        await pool.query(
-          'DELETE FROM cart_items WHERE user_id = $1 AND product_id = $2',
-          [user.id, productId]
-        )
+        await CartItem.deleteOne({ user: userId, product: productId })
       } else {
-        await pool.query(
-          'UPDATE cart_items SET quantity = $1 WHERE user_id = $2 AND product_id = $3',
-          [quantity, user.id, productId]
-        )
+        await CartItem.updateOne({ user: userId, product: productId }, { $set: { quantity } }, { upsert: true })
       }
-
-      res.status(200).json({ message: 'Cart updated' })
-    } catch (error) {
-      console.error('Cart update error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      return res.status(200).json({ message: 'Cart updated' })
     }
-  } else if (req.method === 'DELETE') {
-    try {
+
+    if (req.method === 'DELETE') {
       const { productId } = req.body
-
-      if (!productId) {
-        return res.status(400).json({ error: 'Product ID is required' })
-      }
-
-      await pool.query(
-        'DELETE FROM cart_items WHERE user_id = $1 AND product_id = $2',
-        [user.id, productId]
-      )
-
-      res.status(200).json({ message: 'Item removed from cart' })
-    } catch (error) {
-      console.error('Cart remove error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      if (!productId) return res.status(400).json({ error: 'Product ID is required' })
+      await CartItem.deleteOne({ user: userId, product: productId })
+      return res.status(200).json({ message: 'Item removed from cart' })
     }
-  } else {
+
     res.status(405).json({ error: 'Method not allowed' })
+  } catch (error) {
+    console.error('Cart API error:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
 

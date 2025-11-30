@@ -24,7 +24,7 @@ export default function About() {
 
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <Image
-              src="/assets/hero-toolbox.svg"
+              src="/assets/avatar-2.png"
               alt="Handcrafted tools"
               width={720}
               height={480}

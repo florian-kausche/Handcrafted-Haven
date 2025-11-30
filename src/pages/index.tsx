@@ -34,7 +34,15 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: 3, title: 'Handmade Silver Necklace', price: 120.00, image: '/assets/product-3.jpeg', featured: false, description: 'Handcrafted silver necklace with unique stone setting.', rating: 4.5, artisanName: 'Emma Thompson' },
   { id: 4, title: 'Wooden Serving Bowls', price: 75.00, image: '/assets/product-4.png', featured: false, description: 'Turned wooden serving bowls finished with food-safe oil.', rating: 5, artisanName: 'James Walker' },
   { id: 5, title: 'Natural Soy Candle Set', price: 45.00, image: '/assets/product-5.png', featured: false, description: 'Hand-poured soy candles with natural fragrances.', rating: 4.5, artisanName: 'Lisa Anderson' },
-  { id: 6, title: 'Leather Journal Cover', price: 55.00, image: '/assets/product-6.png', featured: false, description: 'Vegetable-tanned leather journal cover, stitched by hand.', rating: 5, artisanName: 'Michael Brown' }
+  { id: 6, title: 'Leather Journal Cover', price: 55.00, image: '/assets/product-6.png', featured: false, description: 'Vegetable-tanned leather journal cover, stitched by hand.', rating: 5, artisanName: 'Michael Brown' },
+  { id: 7, title: 'Ornate Ceramic Vase', price: 48.00, image: '/assets/pottery/Ornateceramic.jpg', featured: true, description: 'A hand-glazed ornate ceramic vase, perfect for flowers or as a decorative piece.', rating: 4.7, artisanName: 'Pottery Collective' },
+  { id: 8, title: 'Essaouira Decorative Pot', price: 55.00, image: '/assets/pottery/essaouirapot.jpg', featured: true, description: 'Decorative pot hand-painted with coastal motifs from Essaouira.', rating: 4.8, artisanName: 'Pottery Collective' },
+  { id: 9, title: 'Decorated Tajine', price: 39.00, image: '/assets/pottery/DecoratedTajines.jpg', featured: false, description: 'Beautifully decorated tajine pot suitable for serving and cooking.', rating: 4.6, artisanName: 'Pottery Collective' },
+  { id: 10, title: 'Market Clay Pots', price: 26.00, image: '/assets/pottery/soupkpots.jpg', featured: false, description: 'Simple, sturdy clay pots traditionally used for cooking and storage.', rating: 4.4, artisanName: 'Pottery Collective' },
+  { id: 11, title: 'Hand-Thrown Planter', price: 34.00, image: '/assets/product-4.png', featured: true, description: 'A modern planter finished with a matte glaze, ideal for indoor greenery.', rating: 4.6, artisanName: 'Green Studio' },
+  { id: 12, title: 'Set of Stoneware Mugs', price: 58.00, image: '/assets/product-5.png', featured: true, description: 'Durable stoneware mugs, each with a unique speckled glaze.', rating: 4.9, artisanName: 'Clay & Co.' },
+  { id: 13, title: 'Engraved Wooden Spoon', price: 18.00, image: '/assets/product-6.png', featured: false, description: 'Hand-carved wooden spoon with decorative engraving.', rating: 5, artisanName: 'James Walker' },
+  { id: 14, title: 'Scented Candle Trio', price: 29.00, image: '/assets/candle1.jpeg', featured: false, description: 'Three small soy candles in seasonal fragrances.', rating: 4.7, artisanName: 'Lisa Anderson' }
 ]
 
 export default function Home() {
@@ -54,7 +62,7 @@ export default function Home() {
     try {
       const data = await productsAPI.getAll({ featured: true })
       if (data.products && data.products.length > 0) {
-        setProducts(data.products.map((p: any) => ({
+        const mapped = data.products.map((p: any) => ({
           id: p.id,
           title: p.title,
           price: parseFloat(p.price),
@@ -63,7 +71,21 @@ export default function Home() {
           description: p.description,
           rating: p.rating || 5,
           artisanName: p.artisan_name || 'Artisan',
-        })))
+        }))
+
+        // If the API returned few featured items, supplement with sample featured products
+        const TARGET_COUNT = 6
+        if (mapped.length < TARGET_COUNT) {
+          const existingTitles = new Set(mapped.map((m: any) => m.title))
+          const fallback = SAMPLE_PRODUCTS.filter((s: any) => s.featured && !existingTitles.has(s.title))
+          let i = 0
+          while (mapped.length < TARGET_COUNT && i < fallback.length) {
+            mapped.push(fallback[i])
+            i++
+          }
+        }
+
+        setProducts(mapped)
       } else {
         // Fallback to sample products if API fails
         setProducts(SAMPLE_PRODUCTS)
@@ -140,7 +162,7 @@ export default function Home() {
             <div className="hero-right">
               <div className="hero-card">
                 <Image
-                  src="/assets/hero-toolbox.svg"
+                  src="/assets/avatar-2.png"
                   alt="Handcrafted tools and materials"
                   width={520}
                   height={360}

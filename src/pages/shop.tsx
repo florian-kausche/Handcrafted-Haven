@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
+import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Header from '../components/Header'
@@ -7,6 +8,8 @@ import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import { productsAPI } from '../lib/api'
 import { useCart } from '../contexts/CartContext'
+import connectMongoose from '../lib/mongoose'
+import ProductModel from '../models/Product'
 
 interface Product {
   id: number
@@ -24,14 +27,32 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: '89.99', image_url: '/assets/product-1.jpeg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisan_name: 'Sarah Martinez', category: 'Pottery & Ceramics' },
   { id: 2, title: 'Artisan Woven Basket', price: '65.00', image_url: '/assets/product-2.jpeg', featured: true, description: 'Handwoven storage basket using natural fibers.', rating: 5, artisan_name: 'Maria Chen', category: 'Textiles & Weaving' },
   { id: 3, title: 'Handmade Silver Necklace', price: '120.00', image_url: '/assets/product-3.jpeg', featured: false, description: 'Handcrafted silver necklace with unique stone setting.', rating: 4.5, artisan_name: 'Emma Thompson', category: 'Jewelry' },
+  { id: 11, title: 'Beaded Maasai Necklace', price: '55.00', image_url: '/assets/product-11.jpeg', featured: false, description: 'Colorful handcrafted beaded necklace inspired by Maasai designs.', rating: 4.7, artisan_name: 'Nia Wanjiru', category: 'Jewelry' },
+  { id: 12, title: 'Kente Cloth Wrap', price: '150.00', image_url: '/assets/product-12.jpeg', featured: false, description: 'Handwoven Kente cloth from Ghana, bright geometric patterns.', rating: 4.9, artisan_name: 'Kwame Mensah', category: 'Textiles & Weaving' },
+  { id: 13, title: 'Carved Wooden Stool', price: '120.00', image_url: '/assets/product-13.jpeg', featured: false, description: 'Solid carved wooden stool with traditional motifs.', rating: 4.8, artisan_name: 'Ayo Okonkwo', category: 'Woodwork' },
+  { id: 14, title: 'Brass Tuareg Lamp', price: '85.00', image_url: '/assets/product-14.jpeg', featured: false, description: 'Hand-hammered brass lamp in Tuareg style.', rating: 4.6, artisan_name: 'Ibrahim El-Mansour', category: 'Woodwork' },
+  { id: 15, title: 'Soapstone Elephant', price: '40.00', image_url: '/assets/product-15.jpeg', featured: false, description: 'Small soapstone carving of an elephant, polished finish.', rating: 4.5, artisan_name: 'Lekwa Carvings', category: 'Woodwork' },
   { id: 4, title: 'Wooden Serving Bowls', price: '75.00', image_url: '/assets/product-4.png', featured: false, description: 'Turned wooden serving bowls finished with food-safe oil.', rating: 5, artisan_name: 'James Walker', category: 'Woodwork' },
   { id: 5, title: 'Natural Soy Candle Set', price: '45.00', image_url: '/assets/product-5.png', featured: false, description: 'Hand-poured soy candles with natural fragrances.', rating: 4.5, artisan_name: 'Lisa Anderson', category: 'Candles' },
   { id: 6, title: 'Leather Journal Cover', price: '55.00', image_url: '/assets/product-6.png', featured: false, description: 'Vegetable-tanned leather journal cover, stitched by hand.', rating: 5, artisan_name: 'Michael Brown', category: 'Leather' },
+  { id: 7, title: 'Ornate Ceramic Vase', price: '74.00', image_url: '/assets/pottery/Ornateceramic.jpg', featured: false, description: 'Decorative hand-painted ceramic vase with intricate patterns.', rating: 4.9, artisan_name: "Sarah's Pottery", category: 'Pottery & Ceramics' },
+  { id: 8, title: 'Traditional Souk Pots', price: '48.00', image_url: '/assets/pottery/soukpots.jpg', featured: false, description: 'Set of small decorative pots inspired by North African souk wares.', rating: 4.8, artisan_name: "Sarah's Pottery", category: 'Pottery & Ceramics' },
+  { id: 9, title: 'Essaouira Clay Pot', price: '62.50', image_url: '/assets/pottery/essaouirapot.jpg', featured: false, description: 'Robust clay pot crafted in traditional Essaouira style.', rating: 4.9, artisan_name: "Sarah's Pottery", category: 'Pottery & Ceramics' },
+  { id: 10, title: 'Decorated Tajines', price: '95.00', image_url: '/assets/pottery/DecoratedTajines.jpg', featured: false, description: 'Hand-decorated tajines perfect for cooking and display.', rating: 5.0, artisan_name: "Sarah's Pottery", category: 'Pottery & Ceramics' },
+  { id: 16, title: 'Handwoven Raffia Mat', price: '38.00', image_url: '/assets/product-16.jpeg', featured: false, description: 'Durable handwoven raffia mat for home display or use.', rating: 4.4, artisan_name: 'Coast Weavers', category: 'Textiles & Weaving' },
+  { id: 17, title: 'Beaded Leather Sandals', price: '65.00', image_url: '/assets/product-17.jpeg', featured: false, description: 'Comfortable leather sandals decorated with beadwork.', rating: 4.6, artisan_name: 'Tala Footwear', category: 'Leather' },
+  { id: 18, title: 'Indigo Adire Scarf', price: '42.00', image_url: '/assets/product-18.jpeg', featured: false, description: 'Resist-dyed indigo scarf using traditional Adire techniques.', rating: 4.7, artisan_name: 'Abeni Textiles', category: 'Textiles & Weaving' },
+  { id: 19, title: 'Hand-poured Scented Candle', price: '22.00', image_url: '/assets/product-19.jpeg', featured: false, description: 'Small batch scented candle using local essential oils.', rating: 4.5, artisan_name: 'Mwezi Candles', category: 'Candles' },
+  { id: 20, title: 'Tuareg Leather Wallet', price: '28.00', image_url: '/assets/product-20.jpeg', featured: false, description: 'Handstitched leather wallet with stamped patterns.', rating: 4.3, artisan_name: 'Sahara Leather', category: 'Leather' },
 ]
 
-export default function Shop() {
+type ShopProps = {
+  initialProducts?: Product[]
+}
+
+export default function Shop({ initialProducts = [] }: ShopProps) {
   const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<Product[]>(initialProducts)
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const { addItem } = useCart()
@@ -43,7 +64,8 @@ export default function Shop() {
     if (router.query.category && router.query.category !== selectedCategory) {
       setSelectedCategory(router.query.category as string)
     }
-    loadProducts()
+    // Load client-side only if there is no initial data
+    if ((!products || products.length === 0) && !router.query.ssr) loadProducts()
   }, [router.query, selectedCategory])
 
   const loadProducts = async () => {
@@ -53,14 +75,13 @@ export default function Shop() {
       if (router.query.search) params.search = router.query.search as string
       if (router.query.category) params.category = router.query.category as string
       if (selectedCategory && selectedCategory !== 'All') params.category = selectedCategory
-
       const data = await productsAPI.getAll(params)
       // normalize products coming from API to include category and expected fields
       const apiProducts = (data.products || []).map((p: any) => ({
         id: p.id,
         title: p.title,
         price: p.price || '0.00',
-        image_url: p.image_url || '/assets/product-1.jpeg',
+        image_url: p.image_url || (p.images && p.images[0] && p.images[0].url) || '/assets/product-1.jpeg',
         featured: p.featured || false,
         description: p.description || '',
         rating: p.rating || 5,
@@ -218,5 +239,35 @@ export default function Shop() {
       <Footer onSubscribe={() => {}} subscribed={false} />
     </>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  try {
+    const { category, search } = context.query as any
+    await connectMongoose()
+
+    const filter: any = {}
+    if (category) filter.category = category
+    if (search) filter.$text = { $search: search }
+
+    const products = await ProductModel.find(filter).sort({ createdAt: -1 }).limit(200).lean()
+
+    const serialized = products.map((p: any) => ({
+      id: p._id.toString(),
+      title: p.title,
+      price: (p.price ?? 0).toString(),
+      image_url: (p.image_url || (p.images && p.images[0] && p.images[0].url) || (p.images && p.images[0] && p.images[0].url) || '/assets/product-1.jpeg'),
+      featured: !!p.featured,
+      description: p.description || p.shortDescription || '',
+      rating: p.rating || 5,
+      artisan_name: (p.artisan && p.artisan.name) || (p.artisan && p.artisan.name) || 'Artisan',
+      category: p.category || 'Uncategorized',
+    }))
+
+    return { props: { initialProducts: serialized } }
+  } catch (err) {
+    console.error('getServerSideProps error (shop):', err)
+    return { props: { initialProducts: [] } }
+  }
 }
 

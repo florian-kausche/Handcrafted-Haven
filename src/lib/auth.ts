@@ -1,15 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import pool from './db'
+import connectMongoose from './mongoose'
+import User from '../models/User'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
-export interface User {
-  id: number
+export interface UserPayload {
+  id: string
   email: string
-  firstName: string | null
-  lastName: string | null
   role: string
 }
 
@@ -21,7 +20,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash)
 }
 
-export function generateToken(user: User): string {
+export function generateToken(user: UserPayload): string {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,
@@ -29,32 +28,31 @@ export function generateToken(user: User): string {
   )
 }
 
-export function verifyToken(token: string): User | null {
+export function verifyToken(token: string): UserPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as User
+    const decoded = jwt.verify(token, JWT_SECRET) as UserPayload
     return decoded
   } catch (error) {
     return null
   }
 }
 
-export async function getCurrentUser(req: NextApiRequest): Promise<User | null> {
+export async function getCurrentUser(req: NextApiRequest): Promise<UserPayload | null> {
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '')
   if (!token) return null
 
-  const user = verifyToken(token)
-  if (!user) return null
+  const payload = verifyToken(token)
+  if (!payload) return null
 
-  // Verify user still exists in database
-  const result = await pool.query('SELECT id, email, first_name, last_name, role FROM users WHERE id = $1', [user.id])
-  if (result.rows.length === 0) return null
-
-  return {
-    id: result.rows[0].id,
-    email: result.rows[0].email,
-    firstName: result.rows[0].first_name,
-    lastName: result.rows[0].last_name,
-    role: result.rows[0].role,
+  try {
+    await connectMongoose()
+    // `.lean()` may have varying inferred types; cast to `any` to satisfy TS here
+    const user = (await User.findById(payload.id).lean()) as any
+    if (!user) return null
+    return { id: user._id.toString(), email: user.email, role: user.role }
+  } catch (err) {
+    console.warn('Failed to verify user from DB', err)
+    return null
   }
 }
 

@@ -1,6 +1,6 @@
 # Handcrafted Haven - Full-Stack E-Commerce Platform
 
-A modern, full-featured e-commerce platform built with Next.js, TypeScript, and PostgreSQL for handcrafted products.
+A modern, full-featured e-commerce platform built with Next.js, TypeScript, and MongoDB (Mongoose) for handcrafted products.
 
 ## Features
 
@@ -20,7 +20,7 @@ A modern, full-featured e-commerce platform built with Next.js, TypeScript, and 
 
 ### Backend
 
-- ✅ PostgreSQL database with full schema
+- ✅ MongoDB (Mongoose) database with models
 - ✅ RESTful API routes
 - ✅ JWT-based authentication
 - ✅ User management
@@ -31,9 +31,9 @@ A modern, full-featured e-commerce platform built with Next.js, TypeScript, and 
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React 18, TypeScript
+- **Frontend**: Next.js 13, React 18, TypeScript
 - **Backend**: Next.js API Routes
-- **Database**: PostgreSQL
+- **Database**: MongoDB (Mongoose)
 - **Authentication**: JWT tokens
 - **Styling**: Custom CSS with CSS Variables
 - **Package Manager**: pnpm
@@ -41,7 +41,7 @@ A modern, full-featured e-commerce platform built with Next.js, TypeScript, and 
 ## Prerequisites
 
 - Node.js 18+
-- PostgreSQL 12+
+- MongoDB (local) or MongoDB Atlas account
 - pnpm (install with `npm install -g pnpm`)
 
 ## Setup Instructions
@@ -52,48 +52,35 @@ A modern, full-featured e-commerce platform built with Next.js, TypeScript, and 
 pnpm install
 ```
 
-### 2. Set Up PostgreSQL Database
+### 2. Set Up MongoDB
 
-Create a new PostgreSQL database:
+You can use a local MongoDB instance or MongoDB Atlas (recommended for cloud). For Atlas, create a free cluster and obtain the connection string (URI).
 
-```bash
-createdb handcrafted_haven
-```
-
-Or using psql:
-
-```sql
-CREATE DATABASE handcrafted_haven;
-```
+If running locally, ensure `mongod` is running and reachable at `mongodb://localhost:27017` (or set `MONGODB_URI` accordingly).
 
 ### 3. Configure Environment Variables
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` or `.env` file in the root directory and set your MongoDB connection string and JWT secret:
 
 ```env
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=handcrafted_haven
-DB_USER=postgres
-DB_PASSWORD=your_password_here
-DB_SSL=false
-
-# JWT Secret (change this in production!)
+MONGODB_URI="your-mongodb-connection-uri"
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
-
-# Next.js
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-nextauth-secret-here
 ```
 
-### 4. Initialize Database Schema
+### 4. Initialize / Seed Database
 
-The database schema will be automatically created on first API call, or you can run:
+The Mongoose models build indexes on connection. To seed sample data (artisans, products, test users) run:
 
 ```bash
-# Create a script to initialize (optional)
-npx ts-node scripts/init-db.ts
+pnpm run seed:mongo
+```
+
+Or with TypeScript seeder:
+
+```bash
+npx ts-node scripts/seed-db.ts
 ```
 
 ### 5. Run Development Server
@@ -104,16 +91,15 @@ pnpm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Database Schema
+## Database Schema (MongoDB Collections)
 
-The application includes the following tables:
+The application uses Mongoose models which map to MongoDB collections:
 
 - **users** - User accounts (customers and artisans)
 - **artisans** - Artisan profiles
 - **products** - Product catalog
-- **cart_items** - Shopping cart items
+- **cartitems** - Shopping cart items
 - **orders** - Order records
-- **order_items** - Order line items
 - **reviews** - Product reviews
 
 ## API Routes
@@ -202,10 +188,10 @@ Make sure to set all required environment variables in `.env.local` before runni
 
 ## Production Deployment
 
-1. Set up PostgreSQL database on your hosting provider
-2. Update environment variables with production values
-3. Set secure JWT_SECRET
-4. Enable SSL for database connection if required
+1. Set up MongoDB (Atlas cluster or managed MongoDB) on your hosting provider
+2. Update environment variables with production values (set `MONGODB_URI`)
+3. Set secure `JWT_SECRET`
+4. Ensure TLS/SSL is enabled for your MongoDB deployment if required
 5. Build and deploy the application
 
 ## License

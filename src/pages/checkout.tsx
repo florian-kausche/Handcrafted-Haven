@@ -14,8 +14,10 @@ export default function Checkout() {
   const [formData, setFormData] = useState({
     shippingAddress: '',
     billingAddress: '',
-    paymentMethod: 'card',
+    paymentMethod: 'credit',
   })
+  const [cardInfo, setCardInfo] = useState({ cardNumber: '', expiry: '', cvc: '' })
+  const [mobileNumber, setMobileNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -45,8 +47,43 @@ export default function Checkout() {
     setLoading(true)
 
     try {
-      await ordersAPI.create(formData)
-      router.push('/account?order=success')
+      const payload: any = { ...formData }
+      // Include payment-specific fields
+      if (formData.paymentMethod === 'credit') payload.card = cardInfo
+      if (formData.paymentMethod === 'mobile') payload.mobileNumber = mobileNumber
+
+      const res = await ordersAPI.create(payload)
+
+      // Handle mock payment responses
+      if (res.redirectUrl) {
+        // PayPal flow - redirect user
+        window.location.href = res.redirectUrl
+        return
+      }
+
+      if (res.bankDetails) {
+        // Show bank instructions and navigate to account/orders
+        alert(`Bank transfer instructions:\nAccount: ${res.bankDetails.accountNumber}\nSort code: ${res.bankDetails.sortCode}\nReference: ${res.bankDetails.reference}`)
+        router.push('/account?order=pending')
+        return
+      }
+
+      if (res.mobileInstructions) {
+        alert(`Mobile payment:\n${res.mobileInstructions}`)
+        router.push('/account?order=pending')
+        return
+      }
+
+      if (res.codInstructions) {
+        alert(`Payment on Delivery:\n${res.codInstructions}`)
+        router.push('/account?order=pending')
+        return
+      }
+
+      if (res.orderId) {
+        router.push('/account?order=success')
+        return
+      }
     } catch (err: any) {
       setError(err.message || 'Checkout failed')
     } finally {
@@ -124,11 +161,76 @@ export default function Checkout() {
                       fontSize: '15px',
                     }}
                   >
-                    <option value="card">Credit/Debit Card</option>
+                    <option value="credit">Credit Card</option>
+                    <option value="mobile">Mobile Money</option>
+                    <option value="cod">Payment on Delivery</option>
                     <option value="paypal">PayPal</option>
                     <option value="bank">Bank Transfer</option>
                   </select>
                 </div>
+
+                {/* Conditional payment UIs */}
+                {formData.paymentMethod === 'credit' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Card Details</label>
+                    <input
+                      placeholder="Card number"
+                      value={cardInfo.cardNumber}
+                      onChange={(e) => setCardInfo({ ...cardInfo, cardNumber: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '12px', marginBottom: '8px', border: '1px solid var(--border)', borderRadius: '8px' }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        placeholder="MM/YY"
+                        value={cardInfo.expiry}
+                        onChange={(e) => setCardInfo({ ...cardInfo, expiry: e.target.value })}
+                        required
+                        style={{ flex: 1, padding: '12px', border: '1px solid var(--border)', borderRadius: '8px' }}
+                      />
+                      <input
+                        placeholder="CVC"
+                        value={cardInfo.cvc}
+                        onChange={(e) => setCardInfo({ ...cardInfo, cvc: e.target.value })}
+                        required
+                        style={{ width: '120px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px' }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>We use a secure payment processor. Card handling here is mocked for demo purposes.</div>
+                  </div>
+                )}
+
+                {formData.paymentMethod === 'mobile' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Mobile Number</label>
+                    <input
+                      placeholder="e.g. +233501234567"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px' }}
+                    />
+                    <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>You will receive a mobile money prompt to confirm the payment.</p>
+                  </div>
+                )}
+
+                {formData.paymentMethod === 'paypal' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ color: 'var(--muted)' }}>You'll be redirected to PayPal to complete the payment.</p>
+                  </div>
+                )}
+
+                {formData.paymentMethod === 'cod' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ color: 'var(--muted)' }}>Pay the courier when your order arrives. Please have the exact amount available.</p>
+                  </div>
+                )}
+
+                {formData.paymentMethod === 'bank' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ color: 'var(--muted)' }}>After placing your order we'll show bank transfer instructions to complete the payment.</p>
+                  </div>
+                )}
               </div>
 
               <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: 'var(--shadow-sm)', height: 'fit-content' }}>

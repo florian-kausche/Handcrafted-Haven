@@ -1,124 +1,61 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool from '../../../lib/db'
+import connectMongoose from '../../../lib/mongoose'
 import { getCurrentUser } from '../../../lib/auth'
+import Artisan from '../../../models/Artisan'
+import Product from '../../../models/Product'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await getCurrentUser(req)
-  if (!user || user.role !== 'artisan') {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
+  if (!user || user.role !== 'artisan') return res.status(401).json({ error: 'Unauthorized' })
 
-  // Get artisan ID
-  const artisanResult = await pool.query('SELECT id FROM artisans WHERE user_id = $1', [user.id])
-  if (artisanResult.rows.length === 0) {
-    return res.status(404).json({ error: 'Artisan profile not found' })
-  }
-  const artisanId = artisanResult.rows[0].id
+  await connectMongoose()
 
-  if (req.method === 'GET') {
-    try {
-      const result = await pool.query(
-        'SELECT * FROM products WHERE artisan_id = $1 ORDER BY created_at DESC',
-        [artisanId]
-      )
-      res.status(200).json({ products: result.rows })
-    } catch (error) {
-      console.error('Products fetch error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+  const artisan = (await Artisan.findOne({ userId: user.id }).lean()) as any
+  if (!artisan) return res.status(404).json({ error: 'Artisan profile not found' })
+  const artisanId = artisan._id
+
+  try {
+    if (req.method === 'GET') {
+      const products = (await Product.find({ 'artisan.id': artisanId }).sort({ createdAt: -1 }).lean()) as any
+      return res.status(200).json({ products })
     }
-  } else if (req.method === 'POST') {
-    try {
+
+    if (req.method === 'POST') {
       const { title, description, price, image_url, featured, category, stock_quantity } = req.body
+      if (!title || !price) return res.status(400).json({ error: 'Title and price are required' })
 
-      if (!title || !price) {
-        return res.status(400).json({ error: 'Title and price are required' })
-      }
-
-      const result = await pool.query(
-        `INSERT INTO products (artisan_id, title, description, price, image_url, featured, category, stock_quantity)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING *`,
-        [artisanId, title, description || null, price, image_url || null, featured || false, category || null, stock_quantity || 0]
-      )
-
-      res.status(201).json({ product: result.rows[0] })
-    } catch (error) {
-      console.error('Product creation error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      const created = await Product.create({ title, description, price, images: image_url ? [{ url: image_url }] : [], featured: !!featured, category, stock_quantity: stock_quantity || 0, artisan: { id: artisanId, name: artisan.businessName } })
+      return res.status(201).json({ product: created })
     }
-  } else if (req.method === 'PUT') {
-    try {
+
+    if (req.method === 'PUT') {
       const { id, title, description, price, image_url, featured, category, stock_quantity } = req.body
+      if (!id) return res.status(400).json({ error: 'Product ID is required' })
 
-      if (!id) {
-        return res.status(400).json({ error: 'Product ID is required' })
-      }
+      const existing = (await Product.findById(id).lean()) as any
+      if (!existing) return res.status(404).json({ error: 'Product not found' })
+      if (existing.artisan?.id?.toString() !== artisanId.toString()) return res.status(403).json({ error: 'Unauthorized' })
 
-      // Verify product belongs to this artisan
-      const verifyResult = await pool.query(
-        'SELECT artisan_id FROM products WHERE id = $1',
-        [id]
-      )
-
-      if (verifyResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Product not found' })
-      }
-
-      if (verifyResult.rows[0].artisan_id !== artisanId) {
-        return res.status(403).json({ error: 'Unauthorized' })
-      }
-
-      const result = await pool.query(
-        `UPDATE products 
-         SET title = COALESCE($1, title),
-             description = COALESCE($2, description),
-             price = COALESCE($3, price),
-             image_url = COALESCE($4, image_url),
-             featured = COALESCE($5, featured),
-             category = COALESCE($6, category),
-             stock_quantity = COALESCE($7, stock_quantity),
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = $8
-         RETURNING *`,
-        [title, description, price, image_url, featured, category, stock_quantity, id]
-      )
-
-      res.status(200).json({ product: result.rows[0] })
-    } catch (error) {
-      console.error('Product update error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      const updated = await Product.findByIdAndUpdate(id, { $set: { title: title ?? existing.title, description: description ?? existing.description, price: price ?? existing.price, images: image_url ? [{ url: image_url }] : existing.images, featured: featured ?? existing.featured, category: category ?? existing.category, stock_quantity: stock_quantity ?? existing.stock_quantity } }, { new: true })
+      return res.status(200).json({ product: updated })
     }
-  } else if (req.method === 'DELETE') {
-    try {
+
+    if (req.method === 'DELETE') {
       const { id } = req.body
+      if (!id) return res.status(400).json({ error: 'Product ID is required' })
 
-      if (!id) {
-        return res.status(400).json({ error: 'Product ID is required' })
-      }
+      const existing = (await Product.findById(id).lean()) as any
+      if (!existing) return res.status(404).json({ error: 'Product not found' })
+      if (existing.artisan?.id?.toString() !== artisanId.toString()) return res.status(403).json({ error: 'Unauthorized' })
 
-      // Verify product belongs to this artisan
-      const verifyResult = await pool.query(
-        'SELECT artisan_id FROM products WHERE id = $1',
-        [id]
-      )
-
-      if (verifyResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Product not found' })
-      }
-
-      if (verifyResult.rows[0].artisan_id !== artisanId) {
-        return res.status(403).json({ error: 'Unauthorized' })
-      }
-
-      await pool.query('DELETE FROM products WHERE id = $1', [id])
-
-      res.status(200).json({ message: 'Product deleted successfully' })
-    } catch (error) {
-      console.error('Product delete error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      await Product.deleteOne({ _id: id })
+      return res.status(200).json({ message: 'Product deleted successfully' })
     }
-  } else {
+
     res.status(405).json({ error: 'Method not allowed' })
+  } catch (error) {
+    console.error('Seller products error:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
 

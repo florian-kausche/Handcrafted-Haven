@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool from '../../../lib/db'
+import connectMongoose from '../../../lib/mongoose'
+import User from '../../../models/User'
+import Artisan from '../../../models/Artisan'
 import { hashPassword, generateToken, setAuthCookie } from '../../../lib/auth'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,53 +16,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Email and password are required' })
     }
 
+    await connectMongoose()
+
     // Check if user already exists
-    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email])
-    if (existingUser.rows.length > 0) {
+    const existing = await User.findOne({ email }).lean()
+    if (existing) {
       return res.status(400).json({ error: 'User with this email already exists' })
     }
 
-    // Hash password
     const passwordHash = await hashPassword(password)
+    const created = await User.create({ email, passwordHash, firstName, lastName, role })
 
-    // Create user
-    const result = await pool.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role',
-      [email, passwordHash, firstName || null, lastName || null, role]
-    )
-
-    const user = result.rows[0]
-
-    // If user is an artisan, create artisan record
     if (role === 'artisan') {
-      await pool.query(
-        'INSERT INTO artisans (user_id, business_name) VALUES ($1, $2)',
-        [user.id, `${firstName || ''} ${lastName || ''}`.trim() || 'My Business']
-      )
+      await Artisan.create({ userId: created._id, businessName: `${firstName || ''} ${lastName || ''}`.trim() || 'My Business' })
     }
 
-    // Generate token
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      role: user.role,
-    })
-
-    // Set cookie
+    const token = generateToken({ id: created._id.toString(), email: created.email, role: created.role })
     setAuthCookie(res, token)
 
-    res.status(201).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        role: user.role,
-      },
-      token,
-    })
+    res.status(201).json({ user: { id: created._id.toString(), email: created.email, firstName: created.firstName, lastName: created.lastName, role: created.role }, token })
   } catch (error) {
     console.error('Registration error:', error)
     res.status(500).json({ error: 'Internal server error' })

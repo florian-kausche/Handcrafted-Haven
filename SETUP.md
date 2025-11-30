@@ -3,57 +3,40 @@
 ## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 pnpm install
 ```
 
-### 2. Set Up PostgreSQL Database
+### 2. Set Up MongoDB
 
-#### Option A: Using psql
-```bash
-# Connect to PostgreSQL
-psql -U postgres
+You can use a local MongoDB instance or MongoDB Atlas (recommended). For Atlas, create a free cluster and copy the connection string (URI).
 
-# Create database
-CREATE DATABASE handcrafted_haven;
-
-# Exit psql
-\q
-```
-
-#### Option B: Using createdb command
-```bash
-createdb handcrafted_haven
-```
+If using a local MongoDB server, ensure `mongod` is running. By default MongoDB listens on `mongodb://localhost:27017`.
 
 ### 3. Configure Environment Variables
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file in the root directory and set your MongoDB connection and JWT secret:
 
 ```env
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=handcrafted_haven
-DB_USER=postgres
-DB_PASSWORD=your_postgres_password_here
-DB_SSL=false
-
-# JWT Secret (IMPORTANT: Change this in production!)
+MONGODB_URI="your-mongodb-connection-uri"
 JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
-
-# Next.js
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-nextauth-secret-here
 ```
 
-### 4. Initialize Database Schema
+### 4. Initialize / Seed Database
 
-The database schema will be automatically created when you make your first API call. Alternatively, you can manually initialize it by running:
+The Mongoose models will ensure indexes are created on connection. To seed sample data, run:
 
 ```bash
-# Make sure your .env.local is configured first
-npx ts-node scripts/init-db.ts
+pnpm run seed:mongo
+```
+
+Or use the TypeScript seeder:
+
+```bash
+npx ts-node scripts/seed-db.ts
 ```
 
 ### 5. Start Development Server
@@ -64,16 +47,15 @@ pnpm run dev
 
 Visit [http://localhost:3000](http://localhost:3000)
 
-## Database Schema
+## Database Schema (MongoDB Collections)
 
-The application automatically creates these tables:
+The application uses Mongoose models which map to MongoDB collections:
 
 - **users** - User accounts (customers and artisans)
 - **artisans** - Artisan profiles linked to users
 - **products** - Product catalog
-- **cart_items** - Shopping cart items
+- **cartitems** - Shopping cart items
 - **orders** - Order records
-- **order_items** - Order line items
 - **reviews** - Product reviews and ratings
 
 ## Testing the Application
@@ -104,27 +86,32 @@ The application automatically creates these tables:
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user  
+- `POST /api/auth/login` - Login user
 - `POST /api/auth/logout` - Logout user
 - `GET /api/auth/me` - Get current user
 
 ### Products
+
 - `GET /api/products` - Get all products (query params: category, featured, search, artisan_id)
 - `GET /api/products/[id]` - Get product by ID with reviews
 
 ### Cart
+
 - `GET /api/cart` - Get user's cart items
 - `POST /api/cart` - Add item to cart (body: { productId, quantity })
 - `DELETE /api/cart` - Remove item from cart (body: { productId })
 
 ### Orders
+
 - `GET /api/orders` - Get user's order history
 - `POST /api/orders` - Create new order (body: { shippingAddress, billingAddress, paymentMethod })
 
 ## Features Implemented
 
 ✅ **Frontend Pages:**
+
 - Home page with featured products
 - Shop page with filtering and search
 - Product detail pages
@@ -137,13 +124,15 @@ The application automatically creates these tables:
 - Contact page
 
 ✅ **Backend API:**
+
 - User authentication (JWT-based)
 - Product management
 - Cart management
 - Order processing
-- Database integration (PostgreSQL)
+- Database integration (MongoDB via Mongoose)
 
 ✅ **Features:**
+
 - User roles (customer/artisan)
 - Shopping cart persistence
 - Order history
@@ -156,25 +145,27 @@ The application automatically creates these tables:
 
 ### Database Connection Issues
 
-1. Verify PostgreSQL is running:
+1. Verify MongoDB is running (local) or your Atlas cluster is reachable:
+
    ```bash
-   # Windows
-   Get-Service postgresql*
+   # Windows (services)
+   Get-Service mongod*
 
    # Linux/Mac
-   sudo systemctl status postgresql
+   sudo systemctl status mongod
    ```
 
-2. Check your `.env.local` credentials match your PostgreSQL setup
+2. Check your `.env.local` `MONGODB_URI` is correct and Atlas IP whitelist allows your client
 
-3. Test connection:
+3. Test connection with the mongo shell or `mongosh` (if installed):
    ```bash
-   psql -U postgres -d handcrafted_haven
+   mongosh "your-mongodb-connection-uri"
    ```
 
 ### Build Errors
 
 1. Clear Next.js cache:
+
    ```bash
    rm -rf .next
    pnpm run build
@@ -194,10 +185,10 @@ The application automatically creates these tables:
 
 ## Production Deployment
 
-1. Set up PostgreSQL database on your hosting provider
-2. Update `.env.local` with production database credentials
+1. Set up a MongoDB deployment (Atlas cluster or managed MongoDB) on your hosting provider
+2. Update `.env.local` with a production `MONGODB_URI` and secure secrets
 3. Set a strong, unique `JWT_SECRET` (minimum 32 characters)
-4. Enable SSL for database if required (`DB_SSL=true`)
+4. Ensure your MongoDB deployment uses TLS/SSL as required by your provider
 5. Build the application:
    ```bash
    pnpm run build
@@ -214,4 +205,3 @@ The application automatically creates these tables:
 - Add admin dashboard
 - Implement product reviews submission
 - Add email notifications
-

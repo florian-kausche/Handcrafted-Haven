@@ -1,16 +1,16 @@
-// Database initialization script
+// Mongoose initialization script
 // Run with: npx ts-node scripts/init-db.ts
 
-import { initDatabase } from '../src/lib/db'
+import connectMongoose from '../src/lib/mongoose'
 
 async function main() {
   try {
-    console.log('Initializing database...')
-    await initDatabase()
-    console.log('Database initialized successfully!')
+    console.log('Connecting to MongoDB...')
+    await connectMongoose()
+    console.log('Connected. Ensure indexes are built by the models.')
     process.exit(0)
   } catch (error) {
-    console.error('Failed to initialize database:', error)
+    console.error('Failed to initialize MongoDB connection:', error)
     process.exit(1)
   }
 }

@@ -1,100 +1,77 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool from '../../../lib/db'
-import { getCurrentUser } from '../../../lib/auth'
+import connectMongoose from '../../../../src/lib/mongoose'
+import { getCurrentUser } from '../../../../src/lib/auth'
+import CartItem from '../../../../src/models/CartItem'
+import Order from '../../../../src/models/Order'
+import Product from '../../../../src/models/Product'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  await connectMongoose()
   const user = await getCurrentUser(req)
-  if (!user) {
-    return res.status(401).json({ error: 'Not authenticated' })
-  }
+  if (!user) return res.status(401).json({ error: 'Not authenticated' })
 
-  if (req.method === 'GET') {
-    try {
-      const result = await pool.query(
-        `SELECT 
-          o.*,
-          json_agg(
-            json_build_object(
-              'id', oi.id,
-              'product_id', oi.product_id,
-              'quantity', oi.quantity,
-              'price', oi.price,
-              'title', p.title,
-              'image_url', p.image_url
-            )
-          ) as items
-        FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
-        LEFT JOIN products p ON oi.product_id = p.id
-        WHERE o.user_id = $1
-        GROUP BY o.id
-        ORDER BY o.created_at DESC`,
-        [user.id]
-      )
+  const userId = user.id
 
-      res.status(200).json({ orders: result.rows })
-    } catch (error) {
-      console.error('Orders fetch error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+  try {
+    if (req.method === 'GET') {
+      const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).lean()
+      return res.status(200).json({ orders })
     }
-  } else if (req.method === 'POST') {
-    try {
-      const { shippingAddress, billingAddress, paymentMethod } = req.body
 
-      // Get cart items
-      const cartResult = await pool.query(
-        `SELECT ci.product_id, ci.quantity, p.price
-        FROM cart_items ci
-        JOIN products p ON ci.product_id = p.id
-        WHERE ci.user_id = $1`,
-        [user.id]
-      )
+    if (req.method === 'POST') {
+      const { shippingAddress, billingAddress, paymentMethod, card, mobileNumber } = req.body
 
-      if (cartResult.rows.length === 0) {
-        return res.status(400).json({ error: 'Cart is empty' })
+      const cartItems = await CartItem.find({ user: userId }).populate('product').lean()
+      if (!cartItems || cartItems.length === 0) return res.status(400).json({ error: 'Cart is empty' })
+
+      const totalAmount = cartItems.reduce((sum: number, it: any) => sum + (it.product.price || 0) * it.quantity, 0)
+      const pm = (paymentMethod || '').toString().toLowerCase()
+
+      if (pm === 'credit' || pm === 'card') {
+        // immediate charge (mock) and mark paid
+        const order = await Order.create({ user: userId, items: cartItems.map((it: any) => ({ product: it.product._id, quantity: it.quantity, price: it.product.price })), total_amount: totalAmount, status: 'paid', shipping_address: shippingAddress || '', billing_address: billingAddress || '', payment_method: 'credit' })
+
+        // decrement stock
+        for (const it of cartItems) {
+          await Product.updateOne({ _id: it.product._id }, { $inc: { stock_quantity: -it.quantity } })
+        }
+
+        await CartItem.deleteMany({ user: userId })
+        return res.status(200).json({ orderId: order._id, status: 'paid' })
       }
 
-      // Calculate total
-      const totalAmount = cartResult.rows.reduce(
-        (sum, item) => sum + parseFloat(item.price) * item.quantity,
-        0
-      )
-
-      // Create order
-      const orderResult = await pool.query(
-        `INSERT INTO orders (user_id, total_amount, shipping_address, billing_address, payment_method, status)
-        VALUES ($1, $2, $3, $4, $5, 'pending')
-        RETURNING id`,
-        [user.id, totalAmount, shippingAddress, billingAddress, paymentMethod || 'card']
-      )
-
-      const orderId = orderResult.rows[0].id
-
-      // Create order items
-      for (const item of cartResult.rows) {
-        await pool.query(
-          `INSERT INTO order_items (order_id, product_id, quantity, price)
-          VALUES ($1, $2, $3, $4)`,
-          [orderId, item.product_id, item.quantity, item.price]
-        )
-
-        // Update product stock
-        await pool.query(
-          'UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2',
-          [item.quantity, item.product_id]
-        )
+      if (pm === 'paypal') {
+        const order = await Order.create({ user: userId, items: cartItems.map((it: any) => ({ product: it.product._id, quantity: it.quantity, price: it.product.price })), total_amount: totalAmount, status: 'pending', shipping_address: shippingAddress || '', billing_address: billingAddress || '', payment_method: 'paypal' })
+        const host = req.headers.host || 'localhost:3000'
+        const redirectUrl = `https://${host}/api/orders/paypal/simulate?order=${order._id}`
+        return res.status(200).json({ orderId: order._id, status: 'pending', redirectUrl })
       }
 
-      // Clear cart
-      await pool.query('DELETE FROM cart_items WHERE user_id = $1', [user.id])
+      if (pm === 'bank') {
+        const order = await Order.create({ user: userId, items: cartItems.map((it: any) => ({ product: it.product._id, quantity: it.quantity, price: it.product.price })), total_amount: totalAmount, status: 'pending', shipping_address: shippingAddress || '', billing_address: billingAddress || '', payment_method: 'bank' })
+        const bankDetails = { accountName: 'Handcrafted Haven Ltd', accountNumber: '12345678', sortCode: '00-00-00', reference: `ORDER-${order._id}`, instructions: 'Please include the order reference in your transfer. Order will be processed once funds clear.' }
+        return res.status(200).json({ orderId: order._id, status: 'pending', bankDetails })
+      }
 
-      res.status(201).json({ orderId, message: 'Order created successfully' })
-    } catch (error) {
-      console.error('Order creation error:', error)
-      res.status(500).json({ error: 'Internal server error' })
+      if (pm === 'mobile') {
+        const order = await Order.create({ user: userId, items: cartItems.map((it: any) => ({ product: it.product._id, quantity: it.quantity, price: it.product.price })), total_amount: totalAmount, status: 'pending', shipping_address: shippingAddress || '', billing_address: billingAddress || '', payment_method: 'mobile' })
+        const mobileInstructions = `Please complete the mobile money payment from ${mobileNumber || '[your number]'} to +1234567890 using reference ORDER-${order._id}. Once payment is received we'll process your order.`
+        return res.status(200).json({ orderId: order._id, status: 'pending', mobileInstructions })
+      }
+
+      if (pm === 'cod') {
+        const order = await Order.create({ user: userId, items: cartItems.map((it: any) => ({ product: it.product._id, quantity: it.quantity, price: it.product.price })), total_amount: totalAmount, status: 'pending', shipping_address: shippingAddress || '', billing_address: billingAddress || '', payment_method: 'cod' })
+        const codInstructions = `Payment on delivery selected. Please have the exact amount ready for the courier. Order reference: ORDER-${order._id}`
+        return res.status(200).json({ orderId: order._id, status: 'pending', codInstructions })
+      }
+
+      return res.status(400).json({ error: 'Unsupported payment method' })
     }
-  } else {
+
     res.status(405).json({ error: 'Method not allowed' })
+  } catch (error) {
+    console.error('Order API error:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
 
