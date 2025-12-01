@@ -1,23 +1,6 @@
 import React, { useEffect } from 'react'
 import Image from 'next/image'
-
-interface CartItem {
-  id: number
-  title: string
-  price: number
-  qty: number
-}
-
-interface Product {
-  id: number
-  title: string
-  price: number
-  image: string
-  featured: boolean
-  description: string
-  rating: number
-  artisanName: string
-}
+import type { Product, CartItem } from '../types'
 
 interface ModalProps {
   isOpen: boolean
@@ -25,7 +8,7 @@ interface ModalProps {
   type: 'cart' | 'product'
   cart?: CartItem[]
   product?: Product
-  onRemoveFromCart?: (id: number) => void
+  onRemoveFromCart?: (id: string | number) => void
   onClearCart?: () => void
   onAddToCart?: (product: Product) => void
 }
@@ -53,7 +36,7 @@ export default function Modal({
 
   if (!isOpen) return null
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0)
+  const total = cart.reduce((sum, item) => sum + parseFloat(item.price as any || '0') * item.quantity, 0)
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
@@ -83,10 +66,10 @@ export default function Modal({
                     <div key={item.id} className="cart-item">
                       <div className="cart-item-info">
                         <h4>{item.title}</h4>
-                        <p>Quantity: {item.qty}</p>
+                        <p>Quantity: {item.quantity}</p>
                       </div>
                       <div className="cart-item-actions">
-                        <span className="cart-item-price">${item.price * item.qty}.00</span>
+                        <span className="cart-item-price">${(parseFloat(item.price as any || '0') * item.quantity).toFixed(2)}</span>
                         <button 
                           className="btn-remove" 
                           onClick={() => onRemoveFromCart?.(item.id)}
@@ -101,7 +84,7 @@ export default function Modal({
                 <div className="cart-footer">
                   <div className="cart-total">
                     <span>Total:</span>
-                    <strong>${total}.00</strong>
+                    <strong>${total.toFixed(2)}</strong>
                   </div>
                   <div className="cart-actions">
                     <button className="btn outline" onClick={onClose}>Continue Shopping</button>
@@ -125,17 +108,25 @@ export default function Modal({
         {type === 'product' && product && (
           <div className="product-modal">
             <div className="product-modal-image">
-              <Image
-                src={product.image}
-                alt={product.title}
-                width={600}
-                height={600}
-                className="product-image-large"
-              />
+              {(() => {
+                const imgSrc = (product.image || product.image_url || '/assets/product-1.jpeg') as string
+                return (
+                  <Image
+                    src={imgSrc}
+                    alt={product.title}
+                    width={600}
+                    height={600}
+                    className="product-image-large"
+                  />
+                )
+              })()}
             </div>
             <div className="product-modal-content">
               <h2>{product.title}</h2>
-              <div className="product-price">${product.price}.00</div>
+              {(() => {
+                const priceNumber = typeof product.price === 'number' ? product.price : parseFloat(product.price as any || '0')
+                return <div className="product-price">${priceNumber.toFixed(2)}</div>
+              })()}
               <p className="product-description">{product.description}</p>
               <div className="product-modal-actions">
                 <button 

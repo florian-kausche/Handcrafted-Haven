@@ -52,23 +52,23 @@ export const productsAPI = {
     return apiRequest(`/products?${query.toString()}`)
   },
 
-  getById: (id: number) => apiRequest(`/products/${id}`),
+  getById: (id: string | number) => apiRequest(`/products/${id}`),
 }
 
 // Cart API
 export const cartAPI = {
   getItems: () => apiRequest('/cart'),
-  addItem: (productId: number, quantity: number) =>
+  addItem: (productId: string | number, quantity: number) =>
     apiRequest('/cart', {
       method: 'POST',
       body: JSON.stringify({ productId, quantity }),
     }),
-  updateItem: (productId: number, quantity: number) =>
+  updateItem: (productId: string | number, quantity: number) =>
     apiRequest('/cart', {
       method: 'PUT',
       body: JSON.stringify({ productId, quantity }),
     }),
-  removeItem: (productId: number) =>
+  removeItem: (productId: string | number) =>
     apiRequest('/cart', {
       method: 'DELETE',
       body: JSON.stringify({ productId }),
@@ -78,7 +78,8 @@ export const cartAPI = {
 // Orders API
 export const ordersAPI = {
   getAll: () => apiRequest('/orders'),
-  create: (data: { shippingAddress: string; billingAddress: string; paymentMethod: string }) =>
+  // Accept any payload (shipping, billing, payment, and optionally items)
+  create: (data: any) =>
     apiRequest('/orders', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -99,7 +100,7 @@ export const sellerAPI = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  deleteProduct: (id: number) =>
+  deleteProduct: (id: string | number) =>
     apiRequest('/products/seller', {
       method: 'DELETE',
       body: JSON.stringify({ id }),

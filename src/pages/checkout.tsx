@@ -47,7 +47,14 @@ export default function Checkout() {
     setLoading(true)
 
     try {
+      // Build payload including cart items so server (or future guest flow) has the details
       const payload: any = { ...formData }
+      payload.items = items.map((it: any) => ({
+        id: it.product_id || it.product?.id || it.id,
+        title: it.title || it.product?.title,
+        price: it.price || (it.product && it.product.price) || 0,
+        quantity: it.quantity,
+      }))
       // Include payment-specific fields
       if (formData.paymentMethod === 'credit') payload.card = cardInfo
       if (formData.paymentMethod === 'mobile') payload.mobileNumber = mobileNumber
@@ -62,26 +69,26 @@ export default function Checkout() {
       }
 
       if (res.bankDetails) {
-        // Show bank instructions and navigate to account/orders
+        // Show bank instructions then go to unified success/pending page
         alert(`Bank transfer instructions:\nAccount: ${res.bankDetails.accountNumber}\nSort code: ${res.bankDetails.sortCode}\nReference: ${res.bankDetails.reference}`)
-        router.push('/account?order=pending')
+        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=bank`)
         return
       }
 
       if (res.mobileInstructions) {
         alert(`Mobile payment:\n${res.mobileInstructions}`)
-        router.push('/account?order=pending')
+        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=mobile`)
         return
       }
 
       if (res.codInstructions) {
         alert(`Payment on Delivery:\n${res.codInstructions}`)
-        router.push('/account?order=pending')
+        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=cod`)
         return
       }
 
       if (res.orderId) {
-        router.push('/account?order=success')
+        router.push(`/order/success?order=${res.orderId}`)
         return
       }
     } catch (err: any) {

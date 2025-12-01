@@ -69,7 +69,7 @@ async function run() {
     {
       title: 'Market Clay Pots',
       price: 26.0,
-      image_url: '/assets/pottery/soupkpots.jpg',
+      image_url: '/assets/pottery/soukpots.jpg',
       description: 'Simple, sturdy clay pots traditionally used for cooking and storage.',
       featured: false,
       rating: 4.4,

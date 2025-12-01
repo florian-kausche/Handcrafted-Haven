@@ -29,7 +29,8 @@ export default function ProductDetail() {
   const loadProduct = async () => {
     setLoading(true)
     try {
-      const data = await productsAPI.getById(Number(id))
+      const idStr = Array.isArray(id) ? id[0] : id
+      const data = await productsAPI.getById(idStr as string)
       setProduct(data.product)
       setReviews(data.reviews || [])
     } catch (error) {

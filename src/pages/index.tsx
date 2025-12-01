@@ -9,24 +9,7 @@ import ProductCard from '../components/ProductCard'
 import Modal from '../components/Modal'
 import { useCart } from '../contexts/CartContext'
 import { productsAPI } from '../lib/api'
-
-interface Product {
-  id: number
-  title: string
-  price: number
-  image: string
-  featured: boolean
-  description: string
-  rating: number
-  artisanName: string
-}
-
-interface CartItem {
-  id: number
-  title: string
-  price: number
-  qty: number
-}
+import type { Product, CartItem } from '../types'
 
 const SAMPLE_PRODUCTS: Product[] = [
   { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: 89.99, image: '/assets/product-1.jpeg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisanName: 'Sarah Martinez' },
@@ -38,11 +21,17 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: 7, title: 'Ornate Ceramic Vase', price: 48.00, image: '/assets/pottery/Ornateceramic.jpg', featured: true, description: 'A hand-glazed ornate ceramic vase, perfect for flowers or as a decorative piece.', rating: 4.7, artisanName: 'Pottery Collective' },
   { id: 8, title: 'Essaouira Decorative Pot', price: 55.00, image: '/assets/pottery/essaouirapot.jpg', featured: true, description: 'Decorative pot hand-painted with coastal motifs from Essaouira.', rating: 4.8, artisanName: 'Pottery Collective' },
   { id: 9, title: 'Decorated Tajine', price: 39.00, image: '/assets/pottery/DecoratedTajines.jpg', featured: false, description: 'Beautifully decorated tajine pot suitable for serving and cooking.', rating: 4.6, artisanName: 'Pottery Collective' },
-  { id: 10, title: 'Market Clay Pots', price: 26.00, image: '/assets/pottery/soupkpots.jpg', featured: false, description: 'Simple, sturdy clay pots traditionally used for cooking and storage.', rating: 4.4, artisanName: 'Pottery Collective' },
+  { id: 10, title: 'Market Clay Pots', price: 26.00, image: '/assets/pottery/soukpots.jpg', featured: false, description: 'Simple, sturdy clay pots traditionally used for cooking and storage.', rating: 4.4, artisanName: 'Pottery Collective' },
   { id: 11, title: 'Hand-Thrown Planter', price: 34.00, image: '/assets/product-4.png', featured: true, description: 'A modern planter finished with a matte glaze, ideal for indoor greenery.', rating: 4.6, artisanName: 'Green Studio' },
   { id: 12, title: 'Set of Stoneware Mugs', price: 58.00, image: '/assets/product-5.png', featured: true, description: 'Durable stoneware mugs, each with a unique speckled glaze.', rating: 4.9, artisanName: 'Clay & Co.' },
   { id: 13, title: 'Engraved Wooden Spoon', price: 18.00, image: '/assets/product-6.png', featured: false, description: 'Hand-carved wooden spoon with decorative engraving.', rating: 5, artisanName: 'James Walker' },
   { id: 14, title: 'Scented Candle Trio', price: 29.00, image: '/assets/candle1.jpeg', featured: false, description: 'Three small soy candles in seasonal fragrances.', rating: 4.7, artisanName: 'Lisa Anderson' }
+  ,{ id: 15, title: 'Blue Glaze Serving Plate', price: 42.00, image: '/assets/product-1.jpeg', featured: true, description: 'Wheel-thrown serving plate with a glossy blue glaze.', rating: 4.8, artisanName: 'Azure Pottery' },
+  { id: 16, title: 'Handloom Table Runner', price: 72.00, image: '/assets/product-2.jpeg', featured: false, description: 'Handloomed table runner using natural dyes and fibers.', rating: 4.6, artisanName: 'Weave House' },
+  { id: 17, title: 'Ceramic Oil Bottle', price: 22.00, image: '/assets/pottery/Ornateceramic.jpg', featured: false, description: 'Small ceramic oil bottle with an elegant spout.', rating: 4.5, artisanName: 'Pottery Collective' },
+  { id: 18, title: 'Mini Succulent Planters (Set of 3)', price: 36.00, image: '/assets/product-4.png', featured: true, description: 'Small planters perfect for succulents and small herbs.', rating: 4.9, artisanName: 'Green Studio' },
+  { id: 19, title: 'Rustic Cutting Board', price: 32.00, image: '/assets/product-6.png', featured: false, description: 'Hand-sanded cutting board finished with food-safe oil.', rating: 4.7, artisanName: 'James Walker' },
+  { id: 20, title: 'Lavender Candle', price: 14.00, image: '/assets/candle1.jpeg', featured: true, description: 'Single lavender-scented soy candle for a calming atmosphere.', rating: 4.8, artisanName: 'Lisa Anderson' }
 ]
 
 export default function Home() {
@@ -102,7 +91,7 @@ export default function Home() {
     const productList = products.length > 0 ? products : SAMPLE_PRODUCTS
     return productList.filter(p => 
       p.title.toLowerCase().includes(q) || 
-      p.description.toLowerCase().includes(q)
+      (p.description || '').toLowerCase().includes(q)
     )
   }, [query, products])
 

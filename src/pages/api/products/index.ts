@@ -129,8 +129,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       Product.countDocuments(filter),
     ])
 
+    // Normalize returned products: ensure `id` exists and fix known image filename typos
+    const normalized = (products || []).map((p: any) => {
+      // prefer existing id, otherwise use _id
+      const id = p.id || (p._id && (typeof p._id === 'string' ? p._id : p._id.toString()))
+
+      // normalize image URL typos (soupkpots -> soukpots)
+      let image_url = p.image_url || (p.images && p.images[0] && p.images[0].url) || ''
+      if (typeof image_url === 'string') {
+        image_url = image_url.replace('soupkpots.jpg', 'soukpots.jpg')
+      }
+
+      return {
+        ...p,
+        id,
+        image_url,
+      }
+    })
+
     const response: any = {
-      products,
+      products: normalized,
       meta: {
         total,
         page: pageNum,

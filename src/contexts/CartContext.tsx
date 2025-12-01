@@ -1,22 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { cartAPI } from '../lib/api'
 import { useAuth } from './AuthContext'
-
-interface CartItem {
-  id: number
-  product_id: number
-  quantity: number
-  title: string
-  price: string
-  image_url: string
-  stock_quantity: number
-}
+import type { CartItem } from '../types'
 
 interface CartContextType {
   items: CartItem[]
   loading: boolean
-  addItem: (productId: number, quantity: number) => Promise<void>
-  removeItem: (productId: number) => Promise<void>
+  addItem: (productId: string | number, quantity: number) => Promise<void>
+  removeItem: (productId: string | number) => Promise<void>
   refreshCart: () => Promise<void>
   getTotal: () => number
   getItemCount: () => number
@@ -51,7 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     refreshCart()
   }, [user])
 
-  const addItem = async (productId: number, quantity: number) => {
+  const addItem = async (productId: string | number, quantity: number) => {
     if (!user) {
       alert('Please login to add items to cart')
       return
@@ -67,7 +58,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const removeItem = async (productId: number) => {
+  const removeItem = async (productId: string | number) => {
     try {
       await cartAPI.removeItem(productId)
       await refreshCart()

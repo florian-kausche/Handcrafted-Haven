@@ -13,9 +13,9 @@ export default function Cart() {
   const { items, removeItem, getTotal, loading, refreshCart } = useCart()
   const { user } = useAuth()
   const router = useRouter()
-  const [updating, setUpdating] = useState<number | null>(null)
+  const [updating, setUpdating] = useState<string | number | null>(null)
 
-  const handleQuantityChange = async (productId: number, newQuantity: number) => {
+  const handleQuantityChange = async (productId: string | number, newQuantity: number) => {
     if (newQuantity <= 0) {
       await removeItem(productId)
       return
@@ -119,7 +119,7 @@ export default function Cart() {
                           </span>
                           <button
                             onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
-                            disabled={updating === item.product_id || item.quantity >= item.stock_quantity}
+                            disabled={updating === item.product_id || item.quantity >= (item.stock_quantity ?? Infinity)}
                             className="btn small outline"
                             style={{ padding: '6px 12px', minWidth: '36px' }}
                           >

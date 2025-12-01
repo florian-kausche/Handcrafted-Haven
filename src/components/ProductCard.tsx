@@ -1,16 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-
-interface Product {
-  id: number
-  title: string
-  price: number
-  image: string
-  featured: boolean
-  description: string
-  rating: number
-  artisanName: string
-}
+import type { Product } from '../types'
 
 interface ProductCardProps {
   product: Product
@@ -19,18 +9,25 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onSelect, onAddToCart }: ProductCardProps) {
+  const priceNumber = typeof product.price === 'number' ? product.price : parseFloat(product.price as any || '0')
+  const rating = typeof product.rating === 'number' ? product.rating : (product.rating ? Number(product.rating) : 0)
   return (
     <article className="product-card">
       {product.featured && <div className="ribbon">Featured</div>}
       <div className="product-image-wrapper" onClick={() => onSelect(product)}>
-        <Image
-          src={product.image}
-          alt={product.title}
-          className="product-image"
-          width={360}
-          height={240}
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+        {(() => {
+          const img = (product.image || product.image_url || '/assets/product-1.jpeg') as string
+          return (
+            <Image
+              src={img}
+              alt={product.title}
+              className="product-image"
+              width={360}
+              height={240}
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          )
+        })()}
       </div>
       <div className="product-body">
         <h3>{product.title}</h3>
@@ -42,7 +39,7 @@ export default function ProductCard({ product, onSelect, onAddToCart }: ProductC
               width="14"
               height="14"
               viewBox="0 0 14 14"
-              fill={i < product.rating ? 'currentColor' : 'none'}
+              fill={i < rating ? 'currentColor' : 'none'}
               stroke="currentColor"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -52,7 +49,7 @@ export default function ProductCard({ product, onSelect, onAddToCart }: ProductC
           <span className="rating-value">{product.rating}</span>
         </div>
         <div className="meta">
-          <div className="price">${product.price.toFixed(2)}</div>
+          <div className="price">${priceNumber.toFixed(2)}</div>
           <button 
             className="btn small" 
             onClick={() => onAddToCart(product)}

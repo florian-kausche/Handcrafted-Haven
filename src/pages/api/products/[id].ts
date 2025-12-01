@@ -20,9 +20,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const product = (await Product.findById(idStr).populate('artisan.id').lean()) as any
     if (!product) return res.status(404).json({ error: 'Product not found' })
 
+    // normalize the product shape for clients: include `id` and normalize known image typos
+    const normalizedProduct = {
+      ...product,
+      id: product.id || (product._id && (typeof product._id === 'string' ? product._id : product._id.toString())),
+      image_url: (product.image_url || (product.images && product.images[0] && product.images[0].url) || '').replace?.('soupkpots.jpg', 'soukpots.jpg') || (product.image_url || (product.images && product.images[0] && product.images[0].url) || ''),
+    }
+
     const reviews = await Review.find({ product: product._id }).populate('user', 'firstName lastName').sort({ createdAt: -1 }).lean()
 
-    res.status(200).json({ product, reviews })
+    res.status(200).json({ product: normalizedProduct, reviews })
   } catch (error) {
     console.error('Product fetch error:', error)
     res.status(500).json({ error: 'Internal server error' })

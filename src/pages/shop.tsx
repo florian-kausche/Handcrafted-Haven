@@ -10,18 +10,7 @@ import { productsAPI } from '../lib/api'
 import { useCart } from '../contexts/CartContext'
 import connectMongoose from '../lib/mongoose'
 import ProductModel from '../models/Product'
-
-interface Product {
-  id: number
-  title: string
-  price: string
-  image_url: string
-  featured: boolean
-  description: string
-  rating: number
-  artisan_name: string
-  category: string
-}
+import type { Product } from '../types'
 
 const SAMPLE_PRODUCTS: Product[] = [
   { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: '89.99', image_url: '/assets/product-1.jpeg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisan_name: 'Sarah Martinez', category: 'Pottery & Ceramics' },
@@ -46,27 +35,38 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: 20, title: 'Tuareg Leather Wallet', price: '28.00', image_url: '/assets/product-20.jpeg', featured: false, description: 'Handstitched leather wallet with stamped patterns.', rating: 4.3, artisan_name: 'Sahara Leather', category: 'Leather' },
 ]
 
+type CategoryCount = { value: string; count: number }
+
 type ShopProps = {
   initialProducts?: Product[]
+  categories?: CategoryCount[]
 }
 
-export default function Shop({ initialProducts = [] }: ShopProps) {
+export default function Shop({ initialProducts = [], categories = [] }: ShopProps) {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [availableCategories, setAvailableCategories] = useState<CategoryCount[]>(categories || [])
   const { addItem } = useCart()
 
-  const categories = ['All', 'Pottery & Ceramics', 'Jewelry', 'Textiles & Weaving', 'Woodwork', 'Candles', 'Leather']
+  const fallbackCats = ['All', 'Pottery & Ceramics', 'Jewelry', 'Textiles & Weaving', 'Woodwork', 'Candles', 'Leather']
 
+  // Sync selectedCategory from URL when it changes
   useEffect(() => {
-    // If URL contains a category query param, sync it to selectedCategory so the button highlights
     if (router.query.category && router.query.category !== selectedCategory) {
       setSelectedCategory(router.query.category as string)
     }
-    // Load client-side only if there is no initial data
-    if ((!products || products.length === 0) && !router.query.ssr) loadProducts()
-  }, [router.query, selectedCategory])
+  }, [router.query.category])
+
+  // Whenever selectedCategory or search changes, load products client-side
+  useEffect(() => {
+    // avoid server-side forced SSR param
+    if (!router.query.ssr) {
+      loadProducts()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, router.query.search])
 
   const loadProducts = async () => {
     setLoading(true)
@@ -78,7 +78,7 @@ export default function Shop({ initialProducts = [] }: ShopProps) {
       const data = await productsAPI.getAll(params)
       // normalize products coming from API to include category and expected fields
       const apiProducts = (data.products || []).map((p: any) => ({
-        id: p.id,
+        id: p.id || (p._id && (typeof p._id === 'string' ? p._id : p._id.toString())) || undefined,
         title: p.title,
         price: p.price || '0.00',
         image_url: p.image_url || (p.images && p.images[0] && p.images[0].url) || '/assets/product-1.jpeg',
@@ -142,14 +142,14 @@ export default function Shop({ initialProducts = [] }: ShopProps) {
           <p style={{ color: 'var(--muted)', marginBottom: '32px' }}>Discover unique handcrafted treasures</p>
 
           <div style={{ display: 'flex', gap: '16px', marginBottom: '40px', flexWrap: 'wrap' }}>
-            {categories.map((cat) => (
+            {(availableCategories.length > 0 ? [{ value: 'All', count: 0 }, ...availableCategories] : fallbackCats.map(c => ({ value: c, count: 0 }))).map((cat) => (
               <button
-                key={cat}
-                onClick={() => handleSelectCategory(cat)}
-                className={selectedCategory === (cat === 'All' ? '' : cat) ? 'btn primary' : 'btn outline'}
+                key={cat.value}
+                onClick={() => handleSelectCategory(cat.value)}
+                className={selectedCategory === (cat.value === 'All' ? '' : cat.value) ? 'btn primary' : 'btn outline'}
                 style={{ padding: '10px 20px' }}
               >
-                {cat}
+                {cat.value}{cat.count ? ` (${cat.count})` : ''}
               </button>
             ))}
           </div>
@@ -194,14 +194,14 @@ export default function Shop({ initialProducts = [] }: ShopProps) {
               ) : (
                 // Group products by category and render sections
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-                  {categories.slice(1).map((cat) => {
-                    const items = products.filter((p) => ((p.category || 'Uncategorized') === cat))
+                  {(availableCategories.length > 0 ? availableCategories : fallbackCats.map(c => ({ value: c, count: 0 }))).map((cat) => {
+                    const items = products.filter((p) => ((p.category || 'Uncategorized') === cat.value))
                     if (items.length === 0) return null
                     return (
-                      <section key={cat}>
+                      <section key={cat.value}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <h3 style={{ margin: 0 }}>{cat}</h3>
-                          <button onClick={() => handleSelectCategory(cat)} className="view-all" style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
+                          <h3 style={{ margin: 0 }}>{cat.value}</h3>
+                          <button onClick={() => handleSelectCategory(cat.value)} className="view-all" style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
                         <div className="products-grid">
                           {items.slice(0, 8).map((product) => {
@@ -264,7 +264,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       category: p.category || 'Uncategorized',
     }))
 
-    return { props: { initialProducts: serialized } }
+    // Build category counts for the category filter UI
+    const catAgg = await ProductModel.aggregate([
+      { $match: {} },
+      { $group: { _id: { $ifNull: ['$category', 'Uncategorized'] }, count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ])
+    const categories = (catAgg || []).map((c: any) => ({ value: c._id, count: c.count }))
+
+    return { props: { initialProducts: serialized, categories } }
   } catch (err) {
     console.error('getServerSideProps error (shop):', err)
     return { props: { initialProducts: [] } }
