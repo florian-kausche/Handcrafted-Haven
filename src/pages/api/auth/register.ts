@@ -4,6 +4,15 @@ import User from '../../../models/User'
 import Artisan from '../../../models/Artisan'
 import { hashPassword, generateToken, setAuthCookie } from '../../../lib/auth'
 
+/*
+  POST /api/auth/register
+
+  Request body: { email, password, firstName, lastName, role }
+  Response: { user, token }
+
+  Creates a new user, optionally creates a related Artisan profile when
+  `role === 'artisan'`, issues a JWT token and sets it as an HttpOnly cookie.
+*/
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -28,9 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const created = await User.create({ email, passwordHash, firstName, lastName, role })
 
     if (role === 'artisan') {
+      // Create an artisan profile linked to the created user
       await Artisan.create({ userId: created._id, businessName: `${firstName || ''} ${lastName || ''}`.trim() || 'My Business' })
     }
 
+    // Generate token and set cookie
     const token = generateToken({ id: created._id.toString(), email: created.email, role: created.role })
     setAuthCookie(res, token)
 

@@ -4,6 +4,16 @@ import Product from '../../../models/Product'
 import Review from '../../../models/Review'
 import mongoose from 'mongoose'
 
+/*
+  GET /api/products/[id]
+
+  Returns a single product along with its reviews. The handler validates the
+  provided `id` and returns 400 for invalid ids, 404 when not found and 200
+  with the normalized product when successful.
+
+  The returned `product` is normalized to include an `id` string and an
+  `image_url` property to make client rendering simpler.
+*/
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })

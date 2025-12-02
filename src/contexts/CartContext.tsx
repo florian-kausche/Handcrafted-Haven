@@ -14,6 +14,16 @@ interface CartContextType {
   showToast?: (message: string, actionLabel?: string, action?: (() => Promise<void>) | (() => void)) => void
 }
 
+/*
+  Cart context
+
+  Responsibilities:
+  - Manage cart state for both authenticated users (server-backed via `CartItem`)
+    and guests (localStorage under key `hh_guest_cart`).
+  - Offer helpers to add/remove items, compute totals and show simple toasts.
+  - When a user logs in the guest cart is synchronized (merged) into the
+    authenticated user's server-side cart.
+*/
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {

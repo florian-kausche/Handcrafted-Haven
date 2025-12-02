@@ -43,6 +43,21 @@ const sampleProducts = [
   }
 ]
 
+/*
+  GET /api/products
+
+  Returns a paginated list of products. Supported query params:
+    - category, featured, search, artisan_id, page, limit, sort, price_min, price_max, facets
+
+  Behavior:
+  - Attempts to connect to MongoDB via `connectMongoose()`. If `MONGODB_URI` is
+    not configured the route falls back to returning `sampleProducts` defined
+    above so the frontend can function in demo mode.
+  - When `facets=true` the endpoint additionally computes category, price and
+    tag facets using an aggregation pipeline and returns them under `facets`.
+  - Products are normalized so each item contains an `id` string and
+    `image_url` (fixing common filename typos).
+*/
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })

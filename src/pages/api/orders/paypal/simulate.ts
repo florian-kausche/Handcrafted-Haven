@@ -3,6 +3,16 @@ import connectMongoose from '../../../../lib/mongoose'
 import Order from '../../../../models/Order'
 import Product from '../../../../models/Product'
 
+/*
+  PayPal simulate endpoint
+
+  This endpoint is a small helper for local/demo environments to simulate a
+  successful PayPal payment. It marks the order as `paid`, decrements stock
+  for the ordered items and returns a tiny HTML page with a link back to the
+  order success page.
+
+  Query params: ?order=<orderId>
+*/
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectMongoose()
 

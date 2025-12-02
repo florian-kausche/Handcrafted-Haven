@@ -1,5 +1,12 @@
 import mongoose from 'mongoose'
 
+/*
+  Product model
+
+  This schema captures the product catalog items displayed in the shop. It
+  includes support for images, simple variants, stock tracking, and a link
+  back to an `Artisan` for seller information.
+*/
 const ImageSchema = new mongoose.Schema({
   url: String,
   alt: String,
@@ -35,7 +42,9 @@ const ProductSchema = new mongoose.Schema({
   attributes: Object,
 }, { timestamps: true })
 
-// Text index for search
+// Text index for search (title, description, tags)
 ProductSchema.index({ title: 'text', description: 'text', tags: 'text' })
 
+// Export the model. `mongoose.models.Product` guards against model recompilation
+// errors during hot reload in development.
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema)

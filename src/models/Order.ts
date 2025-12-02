@@ -1,5 +1,12 @@
 import mongoose from 'mongoose'
 
+/*
+  Order model
+
+  Stores placed orders. Each order references a `User` (unless guest orders are
+  recorded differently) and contains `items` with product references, per-item
+  price and quantity, and overall metadata like status and payment method.
+*/
 const OrderItemSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   quantity: Number,

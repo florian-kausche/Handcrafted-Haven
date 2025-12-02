@@ -1,6 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { clearAuthCookie } from '../../../lib/auth'
 
+/*
+  POST /api/auth/logout
+
+  Clears the HttpOnly auth cookie so the user's session is invalidated.
+*/
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })

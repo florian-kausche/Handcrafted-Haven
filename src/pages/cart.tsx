@@ -9,6 +9,15 @@ import { useCart } from '../contexts/CartContext'
 import { useAuth } from '../contexts/AuthContext'
 import { cartAPI } from '../lib/api'
 
+/*
+  Cart page
+
+  Renders the authenticated user's cart (this page requires auth). The UI
+  relies on `useCart()` which exposes normalized items and helper methods.
+
+  Note: Guest users are shown a small message prompting them to login — guest
+  cart UI is maintained in localStorage and shown in other UX flows.
+*/
 export default function Cart() {
   const { items, removeItem, getTotal, loading, refreshCart, showToast } = useCart()
   const { user } = useAuth()

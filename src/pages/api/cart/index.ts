@@ -4,6 +4,20 @@ import connectMongoose from '../../../lib/mongoose'
 import CartItem from '../../../models/CartItem'
 import Product from '../../../models/Product'
 
+/*
+  Cart API (authenticated users only)
+
+  - GET: returns the authenticated user's cart items. The response normalizes
+    items into a convenient shape for the client such as:
+      { items: [ { id, quantity, product: { id, title, price, image, stock_quantity } } ] }
+
+  - POST: add (or increment) an item in the user's cart. Expects `{ productId, quantity }`.
+  - PUT: update quantity for an item. Expects `{ productId, quantity }`.
+  - DELETE: remove an item. Expects `{ productId }`.
+
+  Note: Guest carts are stored in localStorage on the client and are not handled
+  by this route. Client-side synchronization occurs on login.
+*/
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await getCurrentUser(req)
   if (!user) return res.status(401).json({ error: 'Not authenticated' })
