@@ -100,7 +100,7 @@ export default function Shop({ initialProducts = [], categories = [] }: ShopProp
 
   const handleAddToCart = async (product: Product) => {
     try {
-      await addItem(product.id, 1)
+      await addItem(product, 1)
     } catch (error) {
       console.error('Failed to add to cart:', error)
     }

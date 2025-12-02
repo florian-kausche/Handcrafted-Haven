@@ -18,7 +18,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reviewData, setReviewData] = useState({ rating: 5, comment: '' })
-  const { addItem } = useCart()
+  const { addItem, showToast } = useCart()
 
   useEffect(() => {
     if (id) {
@@ -43,18 +43,17 @@ export default function ProductDetail() {
   const handleAddToCart = async () => {
     if (!product) return
     try {
-      await addItem(product.id, quantity)
-      alert('Added to cart!')
+      await addItem(product, quantity)
     } catch (error) {
       console.error('Failed to add to cart:', error)
-      alert('Failed to add to cart. Please try again.')
+      showToast?.('Failed to add to cart. Please try again.')
     }
   }
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) {
-      alert('Please login to submit a review')
+      showToast?.('Please login to submit a review')
       return
     }
 
@@ -73,10 +72,10 @@ export default function ProductDetail() {
       setReviewData({ rating: 5, comment: '' })
       setShowReviewForm(false)
       loadProduct() // Reload to show new review
-      alert('Review submitted successfully!')
+      showToast?.('Review submitted successfully!')
     } catch (error) {
       console.error('Failed to submit review:', error)
-      alert('Failed to submit review')
+      showToast?.('Failed to submit review')
     }
   }
 

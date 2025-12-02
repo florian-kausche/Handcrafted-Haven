@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { useCart } from '../contexts/CartContext'
 import Image from 'next/image'
 import type { Product, CartItem } from '../types'
 
@@ -23,6 +24,7 @@ export default function Modal({
   onClearCart,
   onAddToCart
 }: ModalProps) {
+  const { showToast } = useCart()
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -91,7 +93,7 @@ export default function Modal({
                     <button 
                       className="btn primary" 
                       onClick={() => {
-                        alert('Checkout demo — cart cleared')
+                        showToast?.('Checkout demo — cart cleared')
                         onClearCart?.()
                         onClose()
                       }}

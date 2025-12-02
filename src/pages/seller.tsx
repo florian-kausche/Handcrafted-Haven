@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
 import { sellerAPI } from '../lib/api'
 
 export default function Seller() {
@@ -34,6 +35,8 @@ export default function Seller() {
       loadData()
     }
   }, [user, authLoading, router])
+
+  const { showToast } = useCart()
 
   const loadData = async () => {
     setLoading(true)
@@ -72,7 +75,7 @@ export default function Seller() {
       loadData()
     } catch (error) {
       console.error('Failed to create product:', error)
-      alert('Failed to create product')
+      showToast?.('Failed to create product')
     }
   }
 
@@ -83,7 +86,7 @@ export default function Seller() {
       loadData()
     } catch (error) {
       console.error('Failed to delete product:', error)
-      alert('Failed to delete product')
+      showToast?.('Failed to delete product')
     }
   }
 

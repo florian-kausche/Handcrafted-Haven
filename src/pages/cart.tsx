@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { cartAPI } from '../lib/api'
 
 export default function Cart() {
-  const { items, removeItem, getTotal, loading, refreshCart } = useCart()
+  const { items, removeItem, getTotal, loading, refreshCart, showToast } = useCart()
   const { user } = useAuth()
   const router = useRouter()
   const [updating, setUpdating] = useState<string | number | null>(null)
@@ -26,7 +26,7 @@ export default function Cart() {
       await refreshCart()
     } catch (error) {
       console.error('Failed to update quantity:', error)
-      alert('Failed to update quantity')
+      showToast?.('Failed to update quantity')
     } finally {
       setUpdating(null)
     }

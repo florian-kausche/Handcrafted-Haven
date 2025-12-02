@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Header from '../components/Header'
@@ -8,28 +8,32 @@ import { useAuth } from '../contexts/AuthContext'
 import { ordersAPI } from '../lib/api'
 
 export default function Checkout() {
-  const { items, getTotal } = useCart()
+  const { items, getTotal, showToast } = useCart()
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [formData, setFormData] = useState({
     shippingAddress: '',
     billingAddress: '',
     paymentMethod: 'credit',
+    guestEmail: '',
   })
   const [cardInfo, setCardInfo] = useState({ cardNumber: '', expiry: '', cvc: '' })
   const [mobileNumber, setMobileNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const emailRef = useRef<HTMLInputElement | null>(null)
+
+  const isValidEmail = (email: string) => {
+    return !!email && /^[\w-.]+@[\w-]+\.[A-Za-z]{2,}$/.test(email)
+  }
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-    } else if (!authLoading && items.length === 0) {
+    if (!authLoading && items.length === 0) {
       router.push('/cart')
     }
-  }, [user, authLoading, items.length, router])
+  }, [authLoading, items.length, router])
 
-  if (authLoading || !user || items.length === 0) {
+  if (authLoading || items.length === 0) {
     return (
       <>
         <Header />
@@ -46,6 +50,17 @@ export default function Checkout() {
     setError('')
     setLoading(true)
 
+    // Guest email validation: focus email and scroll to top when missing/invalid
+    if (!user) {
+      if (!isValidEmail(formData.guestEmail)) {
+        setError('Please enter a valid email address for order updates.')
+        // focus the email input and scroll to top so user sees the error
+        setLoading(false)
+        emailRef.current?.focus()
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }) } catch (err) {}
+        return
+      }
+    }
     try {
       // Build payload including cart items so server (or future guest flow) has the details
       const payload: any = { ...formData }
@@ -70,19 +85,19 @@ export default function Checkout() {
 
       if (res.bankDetails) {
         // Show bank instructions then go to unified success/pending page
-        alert(`Bank transfer instructions:\nAccount: ${res.bankDetails.accountNumber}\nSort code: ${res.bankDetails.sortCode}\nReference: ${res.bankDetails.reference}`)
+        showToast?.(`Bank transfer instructions:\nAccount: ${res.bankDetails.accountNumber}\nSort code: ${res.bankDetails.sortCode}\nReference: ${res.bankDetails.reference}`)
         router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=bank`)
         return
       }
 
       if (res.mobileInstructions) {
-        alert(`Mobile payment:\n${res.mobileInstructions}`)
+        showToast?.(`Mobile payment:\n${res.mobileInstructions}`)
         router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=mobile`)
         return
       }
 
       if (res.codInstructions) {
-        alert(`Payment on Delivery:\n${res.codInstructions}`)
+        showToast?.(`Payment on Delivery:\n${res.codInstructions}`)
         router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=cod`)
         return
       }
@@ -93,6 +108,7 @@ export default function Checkout() {
       }
     } catch (err: any) {
       setError(err.message || 'Checkout failed')
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }) } catch (e) {}
     } finally {
       setLoading(false)
     }
@@ -175,6 +191,21 @@ export default function Checkout() {
                     <option value="bank">Bank Transfer</option>
                   </select>
                 </div>
+
+                {!user && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Email</label>
+                    <input
+                      placeholder="you@example.com"
+                          ref={emailRef}
+                          value={formData.guestEmail}
+                          onChange={(e) => setFormData({ ...formData, guestEmail: e.target.value })}
+                          required
+                          style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px' }}
+                    />
+                    <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>We'll send order updates to this email.</p>
+                  </div>
+                )}
 
                 {/* Conditional payment UIs */}
                 {formData.paymentMethod === 'credit' && (

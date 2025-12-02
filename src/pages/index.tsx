@@ -41,7 +41,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showCart, setShowCart] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
-  const { addItem, items: cartItems } = useCart()
+  const { addItem, items: cartItems, showToast } = useCart()
 
   useEffect(() => {
     loadProducts()
@@ -97,7 +97,7 @@ export default function Home() {
 
   const handleAddToCart = async (product: Product) => {
     try {
-      await addItem(product.id, 1)
+      await addItem(product, 1)
     } catch (error) {
       console.error('Failed to add to cart:', error)
     }
@@ -108,7 +108,7 @@ export default function Home() {
     const form = e.currentTarget
     const email = (form.elements[0] as HTMLInputElement).value
     if (!email || !email.includes('@')) {
-      alert('Please enter a valid email')
+      showToast?.('Please enter a valid email')
       return
     }
     localStorage.setItem('hh_newsletter', email)

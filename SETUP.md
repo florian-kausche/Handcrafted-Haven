@@ -205,3 +205,81 @@ The application uses Mongoose models which map to MongoDB collections:
 - Add admin dashboard
 - Implement product reviews submission
 - Add email notifications
+
+---
+
+# Debugging Information
+
+For debugging purposes, you can enable detailed logging by setting the `DEBUG` environment variable. This will print additional information to the console, which can help in identifying issues.
+
+## Enabling Debug Logs
+
+1. Stop the development server if it's running
+2. Set the `DEBUG` environment variable:
+
+   - On macOS/Linux:
+
+     ```bash
+     export DEBUG=app:*
+
+     # To persist across sessions, add to ~/.bashrc or ~/.zshrc
+     echo 'export DEBUG=app:*' >> ~/.bashrc
+     ```
+
+   - On Windows (Command Prompt):
+
+     ```cmd
+     set DEBUG=app:*
+
+     # To persist, set it in System Properties > Environment Variables
+     ```
+
+   - On Windows (PowerShell):
+
+     ```powershell
+     $env:DEBUG="app:*"
+
+     # To persist, add to your PowerShell profile script
+     ```
+
+3. Restart the development server:
+
+   ```bash
+   pnpm run dev
+   ```
+
+4. Reproduce the issue or run the tests
+5. Check the console output for debug logs
+
+## Common Debug Logs
+
+- `[DEBUG][auth/register] headers:` - Logs request headers for authentication routes
+- `[DEBUG][auth/register] body keys:` - Logs keys of the request body for authentication routes
+- `[DEBUG][auth/login] user found:` - Logs if user is found during login
+- `[DEBUG][auth/login] success for user id:` - Logs successful login with user ID
+- `[DEBUG][auth/register] existing user:` - Logs if an existing user is found during registration
+- `[DEBUG][auth/register] created user id:` - Logs the creation of a new user with their ID and role
+- `[DEBUG][auth/me] headers:` - Logs request headers for auth/me route
+- `[DEBUG][auth/me] authenticated user:` - Logs if user is authenticated, showing user ID, email, and role
+
+## Disabling Debug Logs
+
+To disable debug logs, unset the `DEBUG` environment variable and restart the server:
+
+- On macOS/Linux:
+
+  ```bash
+  unset DEBUG
+  ```
+
+- On Windows (Command Prompt):
+
+  ```cmd
+  set DEBUG=
+  ```
+
+- On Windows (PowerShell):
+
+  ```powershell
+  $env:DEBUG=""
+  ```
