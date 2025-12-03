@@ -51,26 +51,38 @@ export default function Home() {
     try {
       const data = await productsAPI.getAll({ featured: true })
       if (data.products && data.products.length > 0) {
-        const mapped = data.products.map((p: any) => ({
-          id: p.id,
+        // Map API results and ensure each product has a unique id and image
+        const mappedRaw = (data.products || []).map((p: any) => ({
+          id: p.id || (p._id && (typeof p._id === 'string' ? p._id : p._id.toString())),
           title: p.title,
           price: parseFloat(p.price),
-          image: p.image_url || '/assets/product-1.jpeg',
-          featured: p.featured,
-          description: p.description,
+          image: p.image_url || (p.images && p.images[0] && p.images[0].url) || '/assets/product-1.jpeg',
+          featured: !!p.featured,
+          description: p.description || '',
           rating: p.rating || 5,
           artisanName: p.artisan_name || 'Artisan',
         }))
+
+        // Deduplicate by id (or title) while preserving order
+        const seen = new Set<string>()
+        const mapped: Product[] = []
+        for (const p of mappedRaw) {
+          const key = String(p.id || p.title)
+          if (!seen.has(key)) {
+            seen.add(key)
+            mapped.push(p)
+          }
+        }
 
         // If the API returned few featured items, supplement with sample featured products
         const TARGET_COUNT = 6
         if (mapped.length < TARGET_COUNT) {
           const existingTitles = new Set(mapped.map((m: any) => m.title))
           const fallback = SAMPLE_PRODUCTS.filter((s: any) => s.featured && !existingTitles.has(s.title))
-          let i = 0
-          while (mapped.length < TARGET_COUNT && i < fallback.length) {
-            mapped.push(fallback[i])
-            i++
+          for (const fb of fallback) {
+            if (mapped.length >= TARGET_COUNT) break
+            // ensure fallback items have their own image property
+            mapped.push({ ...fb })
           }
         }
 

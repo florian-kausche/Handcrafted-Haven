@@ -91,6 +91,32 @@ pnpm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Cloudinary (Optional) - Browser Uploads for Sellers
+
+This project supports uploading seller product images directly from the browser to Cloudinary using an unsigned upload preset. If you want browser uploads (recommended for production), configure Cloudinary and add the following environment variables to your `.env.local` file.
+
+1. Create a Cloudinary account and a new unsigned upload preset:
+
+   - Go to your Cloudinary dashboard -> Settings -> Upload
+   - Under "Upload presets" create a new preset and set **Signing Mode** to **Unsigned**
+   - Note the **Upload preset** name and your **Cloud name**
+
+2. Add these to `.env.local` (used by the client at runtime):
+
+```env
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your-unsigned-preset
+```
+
+3. How it works
+
+   - The seller upload page (`/seller/upload`) will detect these `NEXT_PUBLIC_` variables and perform a direct upload to Cloudinary from the browser. The returned `secure_url` will be saved as the `image_url` for the product and stored in MongoDB.
+   - If Cloudinary env vars are not present, the page falls back to converting the uploaded file to a data URL and storing that in the product record. This fallback is convenient for local development but not recommended for production due to large DB size and bandwidth costs.
+
+4. Security notes
+   - Unsigned uploads are convenient but allow anyone with the preset to upload. Keep usage limited by only exposing unsigned preset for seller uploads and monitor upload usage in the Cloudinary dashboard.
+   - For stricter production setups, implement signed uploads (server creates a signed signature) or use restricted upload destinations (server-side upload via signed requests).
+
 ## Database Schema (MongoDB Collections)
 
 The application uses Mongoose models which map to MongoDB collections:

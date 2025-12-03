@@ -31,6 +31,10 @@ export default function Seller() {
       router.push('/')
       return
     }
+    // If the query param requests showing the add form, open it
+    if (router.query.showAdd) {
+      setShowAddForm(true)
+    }
     if (user && user.role === 'artisan') {
       loadData()
     }

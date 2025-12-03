@@ -36,9 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Redirect back to order success page with optional order id
+    // Redirect back to order success page with optional order id and guestEmail when present
     const host = req.headers.host || 'localhost:3000'
-    const redirect = `https://${host}/order/success?order=${order._id}`
+    // Prefer guest token when available for secure lookup
+    const guestParam = order.guest_token ? `&guestToken=${encodeURIComponent(order.guest_token)}` : (order.guest_email ? `&guestEmail=${encodeURIComponent(order.guest_email)}` : '')
+    const redirect = `https://${host}/order/success?order=${order._id}${guestParam}`
     res.setHeader('Content-Type', 'text/html')
     res.status(200).send(`<html><body><p>Payment simulated. <a href="${redirect}">View Order Success</a></p></body></html>`)
   } catch (error) {

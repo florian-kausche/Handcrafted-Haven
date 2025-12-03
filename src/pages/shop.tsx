@@ -204,7 +204,7 @@ export default function Shop({ initialProducts = [], categories = [] }: ShopProp
                           <button onClick={() => handleSelectCategory(cat.value)} className="view-all" style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
                         <div className="products-grid">
-                          {items.slice(0, 8).map((product) => {
+                          {items.map((product) => {
                             const productForCard = {
                               id: product.id,
                               title: product.title,

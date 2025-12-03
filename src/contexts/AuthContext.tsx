@@ -44,12 +44,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const data = await authAPI.login(email, password)
     setUser(data.user)
+    // If the user is an artisan (seller), redirect them to the seller dashboard
+    // and open the add-product form so they can upload their first product.
+    if (data.user && data.user.role === 'artisan') {
+      router.push('/seller/upload')
+      return
+    }
     router.push('/')
   }
 
   const register = async (registerData: { email: string; password: string; firstName?: string; lastName?: string; role?: string }) => {
     const data = await authAPI.register(registerData)
     setUser(data.user)
+    if (data.user && data.user.role === 'artisan') {
+      router.push('/seller/upload')
+      return
+    }
     router.push('/')
   }
 

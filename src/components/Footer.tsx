@@ -55,9 +55,9 @@ export default function Footer({ onSubscribe, subscribed }: FooterProps) {
           <ul>
             <li><Link href="/about">About Us</Link></li>
             <li><Link href="/contact">Contact</Link></li>
-            <li><Link href="/contact">FAQs</Link></li>
-            <li><Link href="/contact">Shipping & Returns</Link></li>
-            <li><Link href="/contact">Privacy Policy</Link></li>
+            <li><Link href="/contact#faqs">FAQs</Link></li>
+            <li><Link href="/contact#shipping">Shipping & Returns</Link></li>
+            <li><Link href="/privacy">Privacy Policy</Link></li>
           </ul>
         </div>
         <div className="footer-col">

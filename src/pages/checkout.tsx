@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ordersAPI } from '../lib/api'
 
 export default function Checkout() {
-  const { items, getTotal, showToast } = useCart()
+  const { items, getTotal, showToast, refreshCart } = useCart()
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [formData, setFormData] = useState({
@@ -75,35 +75,73 @@ export default function Checkout() {
       if (formData.paymentMethod === 'mobile') payload.mobileNumber = mobileNumber
 
       const res = await ordersAPI.create(payload)
+      const guestParam = (!user && formData.guestEmail) ? `&guestEmail=${encodeURIComponent(formData.guestEmail)}` : ''
+      // If server returned a guestToken, prefer that (more secure)
+      const returnedToken = res?.guestToken || res?.order?.guest_token || res?.order?.guestToken
+      const guestParamFinal = returnedToken ? `&guestToken=${encodeURIComponent(returnedToken)}` : guestParam
 
       // Handle mock payment responses
       if (res.redirectUrl) {
         // PayPal flow - redirect user
-        window.location.href = res.redirectUrl
+        // Clear guest cart locally and refresh client cart state so UI is empty before redirect
+        if (!user) {
+          try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
+        }
+        try { await refreshCart() } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken, emailSent: !!res.emailSent })) } catch (e) {}
+        // Append guest token/email to PayPal redirect if returned by server
+        const redirectUrl = new URL(res.redirectUrl)
+        if (!user) {
+          if (res.guestToken) redirectUrl.searchParams.set('guestToken', res.guestToken)
+          else if (formData.guestEmail) redirectUrl.searchParams.set('guestEmail', formData.guestEmail)
+        }
+        window.location.href = redirectUrl.toString()
         return
       }
 
       if (res.bankDetails) {
         // Show bank instructions then go to unified success/pending page
         showToast?.(`Bank transfer instructions:\nAccount: ${res.bankDetails.accountNumber}\nSort code: ${res.bankDetails.sortCode}\nReference: ${res.bankDetails.reference}`)
-        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=bank`)
+        // Clear client cart (guest localStorage or refresh server cart) then navigate
+        if (!user) {
+          try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
+        }
+        try { await refreshCart() } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken, emailSent: !!res.emailSent })) } catch (e) {}
+        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=bank${guestParam}`)
         return
       }
 
       if (res.mobileInstructions) {
         showToast?.(`Mobile payment:\n${res.mobileInstructions}`)
-        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=mobile`)
+        if (!user) {
+          try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
+        }
+        try { await refreshCart() } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken, emailSent: !!res.emailSent })) } catch (e) {}
+        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=mobile${guestParam}`)
         return
       }
 
       if (res.codInstructions) {
         showToast?.(`Payment on Delivery:\n${res.codInstructions}`)
-        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=cod`)
+        if (!user) {
+          try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
+        }
+        try { await refreshCart() } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), emailSent: !!res.emailSent })) } catch (e) {}
+        router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=cod${guestParam}`)
         return
       }
 
       if (res.orderId) {
-        router.push(`/order/success?order=${res.orderId}`)
+        // Clear cart on client side (guest localStorage or refresh server cart)
+        if (!user) {
+          try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
+        }
+        try { await refreshCart() } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken })) } catch (e) {}
+        router.push(`/order/success?order=${res.orderId}${guestParam}`)
         return
       }
     } catch (err: any) {

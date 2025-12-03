@@ -84,6 +84,10 @@ export const ordersAPI = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  getById: (id: string | number, guestEmail?: string) => {
+    const q = guestEmail ? `?guestEmail=${encodeURIComponent(guestEmail)}` : ''
+    return apiRequest(`/orders/${id}${q}`)
+  },
 }
 
 // Seller API

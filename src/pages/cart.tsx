@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -23,6 +23,55 @@ export default function Cart() {
   const { user } = useAuth()
   const router = useRouter()
   const [updating, setUpdating] = useState<string | number | null>(null)
+  const [lastOrder, setLastOrder] = useState<any | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
+
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('hh_last_order') : null
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setLastOrder(parsed);
+
+        // If stored order items are only product IDs (no titles), try to
+        // fetch the populated order from the server to show readable
+        // product titles on the receipt. Use guestToken if available.
+        (async () => {
+          try {
+            const id = parsed.orderId || parsed._id
+            if (!id) return
+
+            const hasTitles = (parsed.items || []).some((it: any) => it.title || it.productData?.title || (it.product && it.product.title))
+            if (hasTitles) return
+
+              // Accept different token/email key names that may be stored by older flows
+              const token = parsed.guestToken || parsed.guest_token || parsed.guest_token_value
+              const email = parsed.guestEmail || parsed.guest_email || parsed.email
+              const qs = token ? `?guestToken=${encodeURIComponent(token)}` : (email ? `?guestEmail=${encodeURIComponent(email)}` : '')
+            const resp = await fetch(`/api/orders/${id}${qs}`, { credentials: 'include' })
+            if (!resp.ok) return
+            const body = await resp.json()
+            // Expect the API to return the order in `order` or the raw populated object
+            const populated = body.order || body
+            if (populated) {
+              setLastOrder(populated)
+              // also update localStorage so subsequent loads are populated
+              try {
+                window.localStorage.setItem('hh_last_order', JSON.stringify(populated))
+              } catch (e) {
+                // ignore storage errors
+              }
+            }
+          } catch (e) {
+            // ignore fetch errors; receipt will fallback to IDs
+            console.warn('Could not fetch populated order for receipt', e)
+          }
+        })()
+      }
+    } catch (e) {
+      console.error('Failed to read last order from localStorage', e)
+    }
+  }, [])
 
   const handleQuantityChange = async (productId: string | number, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -81,12 +130,88 @@ export default function Cart() {
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '42px', marginBottom: '32px' }}>Your Cart</h1>
 
           {items.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <p style={{ fontSize: '18px', marginBottom: '24px' }}>Your cart is empty</p>
-              <Link href="/shop" className="btn primary">
-                Continue Shopping
-              </Link>
-            </div>
+            // If cart empty but we have a last order in localStorage, show receipt
+            lastOrder ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <h2 style={{ marginBottom: 8 }}>Thank you — your order is placed</h2>
+                <p style={{ marginBottom: 16 }}>Order ID: <strong>{lastOrder.orderId || lastOrder._id}</strong></p>
+                <div style={{ background: 'white', padding: 20, borderRadius: 8, display: 'inline-block', textAlign: 'left', minWidth: 360 }}>
+                  <h4>Receipt</h4>
+                  <div style={{ marginBottom: 8 }}>
+                    {(lastOrder.items || []).map((it: any, idx: number) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div>{it.title || it.productData?.title || (it.product && it.product.title) || String(it.product || '')} x {it.quantity}</div>
+                        <div>${((it.price || 0) * (it.quantity || 1)).toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 8, marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                    <strong>Total</strong>
+                    <strong>${(lastOrder.total_amount || lastOrder.total || 0).toFixed ? (lastOrder.total_amount || lastOrder.total).toFixed(2) : lastOrder.total_amount}</strong>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="btn primary"
+                      onClick={() => {
+                        // generate simple text invoice and download
+                        const invoice = [`Order ${lastOrder.orderId || lastOrder._id}`, `Total: $${(lastOrder.total_amount || lastOrder.total || 0).toFixed(2)}`, '', 'Items:', ...((lastOrder.items || []).map((it: any) => `- ${it.title || it.productData?.title || String(it.product || '')} x ${it.quantity} — $${((it.price || 0) * (it.quantity || 1)).toFixed(2)}`))].join('\n')
+                        const blob = new Blob([invoice], { type: 'text/plain' })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `invoice-${lastOrder.orderId || lastOrder._id}.txt`
+                        document.body.appendChild(a)
+                        a.click()
+                        a.remove()
+                        URL.revokeObjectURL(url)
+                      }}
+                    >
+                      Download Receipt
+                    </button>
+                    <button
+                      className="btn outline"
+                      onClick={async () => {
+                        setResendLoading(true)
+                        try {
+                          const id = lastOrder.orderId || lastOrder._id
+                          const body: any = {}
+                          // If guest, include guestEmail or guestToken if present
+                          if (lastOrder.guestToken) body.guestToken = lastOrder.guestToken
+                            // include guest token or email in whichever key the stored order uses
+                            if (lastOrder.guestToken) body.guestToken = lastOrder.guestToken
+                            if (lastOrder.guest_token) body.guestToken = lastOrder.guest_token
+                            if (lastOrder.guest_email) body.guestEmail = lastOrder.guest_email
+                            if (lastOrder.guestEmail) body.guestEmail = lastOrder.guestEmail
+                          const resp = await fetch(`/api/orders/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+                          const data = await resp.json()
+                          if (resp.ok && data.ok) {
+                            showToast?.('Receipt resent to your email')
+                          } else {
+                            showToast?.('Failed to resend receipt')
+                          }
+                        } catch (e) {
+                          console.error('Resend error', e)
+                          showToast?.('Failed to resend receipt')
+                        } finally {
+                          setResendLoading(false)
+                        }
+                      }}
+                      disabled={resendLoading}
+                    >
+                      {resendLoading ? 'Sending...' : 'Send to my email'}
+                    </button>
+                    <Link href="/shop" className="btn outline">Continue Shopping</Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                <p style={{ fontSize: '18px', marginBottom: '24px' }}>Your cart is empty</p>
+                <Link href="/shop" className="btn primary">
+                  Continue Shopping
+                </Link>
+              </div>
+            )
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
               <div>

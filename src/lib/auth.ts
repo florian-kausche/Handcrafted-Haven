@@ -92,3 +92,10 @@ export function clearAuthCookie(res: NextApiResponse) {
   res.setHeader('Set-Cookie', 'token=; HttpOnly; Path=/; Max-Age=0')
 }
 
+// SMTP configuration
+export const SMTP_HOST = process.env.SMTP_HOST || 'smtp.example.com'
+export const SMTP_PORT = Number(process.env.SMTP_PORT) || 587
+export const SMTP_USER = process.env.SMTP_USER || 'your-smtp-user'
+export const SMTP_PASS = process.env.SMTP_PASS || 'your-smtp-pass'
+export const SMTP_FROM = process.env.SMTP_FROM || 'Handcrafted Haven <no-reply@yourdomain.com>'
+
