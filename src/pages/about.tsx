@@ -80,28 +80,6 @@ export default function About() {
               </a>
             </div>
           </div>
-
-          <div style={{ marginTop: '40px' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>Our Makers & Creations</h2>
-            <p style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: '20px' }}>
-              A few faces and pieces from our community.
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
-              <Image src="/assets/avatar-1.jpeg" alt="Maker 1" width={64} height={64} />
-              <Image src="/assets/avatar-2.jpeg" alt="Maker 2" width={64} height={64} />
-              <Image src="/assets/avatar-3.svg" alt="Maker 3" width={64} height={64} />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px' }}>
-              <Image src="/assets/product-1.jpeg" alt="Product 1" width={240} height={160} />
-              <Image src="/assets/product-2.jpeg" alt="Product 2" width={240} height={160} />
-              <Image src="/assets/product-3.jpeg" alt="Product 3" width={240} height={160} />
-              <Image src="/assets/product-4.png" alt="Product 4" width={240} height={160} />
-              <Image src="/assets/product-5.png" alt="Product 5" width={240} height={160} />
-              <Image src="/assets/product-6.png" alt="Product 6" width={240} height={160} />
-            </div>
-          </div>
         </div>
       </main>
 

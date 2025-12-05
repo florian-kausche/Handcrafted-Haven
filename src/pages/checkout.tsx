@@ -80,6 +80,21 @@ export default function Checkout() {
       const returnedToken = res?.guestToken || res?.order?.guest_token || res?.order?.guestToken
       const guestParamFinal = returnedToken ? `&guestToken=${encodeURIComponent(returnedToken)}` : guestParam
 
+      // Prepare order data with populated items for localStorage (so receipt can show titles)
+      const orderDataForStorage = {
+        ...(res.order || { orderId: res.orderId, status: res.status }),
+        items: items.map((it: any) => ({
+          product: it.product_id || it.id,
+          title: it.title,
+          price: typeof it.price === 'number' ? it.price : parseFloat(it.price || '0'),
+          quantity: it.quantity,
+        })),
+        total_amount: getTotal(),
+        guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken,
+        guest_email: !user ? formData.guestEmail : undefined,
+        emailSent: !!res.emailSent,
+      }
+
       // Handle mock payment responses
       if (res.redirectUrl) {
         // PayPal flow - redirect user
@@ -88,7 +103,7 @@ export default function Checkout() {
           try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
         }
         try { await refreshCart() } catch (e) {}
-        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken, emailSent: !!res.emailSent })) } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify(orderDataForStorage)) } catch (e) {}
         // Append guest token/email to PayPal redirect if returned by server
         const redirectUrl = new URL(res.redirectUrl)
         if (!user) {
@@ -107,7 +122,7 @@ export default function Checkout() {
           try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
         }
         try { await refreshCart() } catch (e) {}
-        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken, emailSent: !!res.emailSent })) } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify(orderDataForStorage)) } catch (e) {}
         router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=bank${guestParam}`)
         return
       }
@@ -118,7 +133,7 @@ export default function Checkout() {
           try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
         }
         try { await refreshCart() } catch (e) {}
-        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken, emailSent: !!res.emailSent })) } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify(orderDataForStorage)) } catch (e) {}
         router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=mobile${guestParam}`)
         return
       }
@@ -129,7 +144,7 @@ export default function Checkout() {
           try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
         }
         try { await refreshCart() } catch (e) {}
-        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), emailSent: !!res.emailSent })) } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify(orderDataForStorage)) } catch (e) {}
         router.push(`/order/success?order=${res.orderId || ''}&status=pending&method=cod${guestParam}`)
         return
       }
@@ -140,7 +155,7 @@ export default function Checkout() {
           try { localStorage.removeItem('hh_guest_cart') } catch (e) {}
         }
         try { await refreshCart() } catch (e) {}
-        try { localStorage.setItem('hh_last_order', JSON.stringify({ ...(res.order || { orderId: res.orderId, status: res.status }), guestToken: returnedToken || res?.guestToken || res?.order?.guest_token || res?.order?.guestToken })) } catch (e) {}
+        try { localStorage.setItem('hh_last_order', JSON.stringify(orderDataForStorage)) } catch (e) {}
         router.push(`/order/success?order=${res.orderId}${guestParam}`)
         return
       }

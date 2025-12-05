@@ -10,8 +10,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   await connectMongoose()
 
-  const artisan = (await Artisan.findOne({ userId: user.id }).lean()) as any
-  if (!artisan) return res.status(404).json({ error: 'Artisan profile not found' })
+  let artisan = (await Artisan.findOne({ userId: user.id }).lean()) as any
+  // If no artisan profile exists yet, create a minimal one so new sellers
+  // (just-registered users) can immediately add products.
+  if (!artisan) {
+    try {
+      const businessName = (user as any).businessName || (user as any).name || user.email || 'My Shop'
+      const created = await Artisan.create({ userId: user.id, businessName })
+      artisan = (created as any).toObject()
+    } catch (err) {
+      console.error('Failed to create artisan profile:', err)
+      return res.status(500).json({ error: 'Failed to create artisan profile' })
+    }
+  }
   const artisanId = artisan._id
 
   try {

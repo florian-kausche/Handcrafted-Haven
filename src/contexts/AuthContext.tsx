@@ -41,6 +41,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser()
   }, [])
 
+  // Auto-logout after 30 minutes of inactivity
+  useEffect(() => {
+    if (!user) return
+
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 minutes in milliseconds
+    let timeoutId: NodeJS.Timeout
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(async () => {
+        await authAPI.logout()
+        setUser(null)
+        router.push('/login?timeout=true')
+      }, INACTIVITY_TIMEOUT)
+    }
+
+    // Events that indicate user activity
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click']
+    
+    events.forEach(event => {
+      document.addEventListener(event, resetTimer)
+    })
+
+    // Start the timer
+    resetTimer()
+
+    // Cleanup
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      events.forEach(event => {
+        document.removeEventListener(event, resetTimer)
+      })
+    }
+  }, [user, router])
+
   const login = async (email: string, password: string) => {
     const data = await authAPI.login(email, password)
     setUser(data.user)

@@ -14,6 +14,8 @@ export default function Login() {
   const { login } = useAuth()
   const router = useRouter()
 
+  const isTimeout = router.query.timeout === 'true'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -41,6 +43,12 @@ export default function Login() {
           <div style={{ background: 'white', padding: '40px', borderRadius: '16px', boxShadow: 'var(--shadow-md)' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', marginBottom: '8px' }}>Welcome Back</h1>
             <p style={{ color: 'var(--muted)', marginBottom: '32px' }}>Sign in to your account</p>
+
+            {isTimeout && (
+              <div style={{ background: '#fef3c7', color: '#92400e', padding: '12px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #fde68a' }}>
+                You were logged out due to inactivity. Please sign in again.
+              </div>
+            )}
 
             {error && (
               <div style={{ background: '#fee', color: '#c24c3d', padding: '12px', borderRadius: '8px', marginBottom: '24px' }}>

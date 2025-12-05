@@ -45,11 +45,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'PUT') {
       const { productId, quantity } = req.body
       if (!productId || quantity === undefined) return res.status(400).json({ error: 'Product ID and quantity are required' })
-
+      // Support both cases where client sends the cart item's _id or the product id.
+      // Try matching by the cart-item _id first, then fall back to the product field.
       if (quantity <= 0) {
-        await CartItem.deleteOne({ user: userId, product: productId })
+        const byId = await CartItem.deleteOne({ user: userId, _id: productId })
+        if (byId.deletedCount === 0) {
+          await CartItem.deleteOne({ user: userId, product: productId })
+        }
       } else {
-        await CartItem.updateOne({ user: userId, product: productId }, { $set: { quantity } }, { upsert: true })
+        const byId = await CartItem.updateOne({ user: userId, _id: productId }, { $set: { quantity } })
+        if (byId.matchedCount === 0) {
+          await CartItem.updateOne({ user: userId, product: productId }, { $set: { quantity } }, { upsert: true })
+        }
       }
       return res.status(200).json({ message: 'Cart updated' })
     }
@@ -57,7 +64,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'DELETE') {
       const { productId } = req.body
       if (!productId) return res.status(400).json({ error: 'Product ID is required' })
-      await CartItem.deleteOne({ user: userId, product: productId })
+      // Allow deleting by cart item id (_id) or by product id
+      const byId = await CartItem.deleteOne({ user: userId, _id: productId })
+      if (byId.deletedCount === 0) {
+        await CartItem.deleteOne({ user: userId, product: productId })
+      }
       return res.status(200).json({ message: 'Item removed from cart' })
     }
 

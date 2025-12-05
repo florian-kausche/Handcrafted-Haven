@@ -12,11 +12,11 @@ import { productsAPI } from '../lib/api'
 import type { Product, CartItem } from '../types'
 
 const SAMPLE_PRODUCTS: Product[] = [
-  { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: 89.99, image: '/assets/product-1.jpeg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisanName: 'Sarah Martinez' },
+  { id: 1, title: 'Handcrafted Ceramic Bowl Set', price: 89.99, image: '/assets/pottery/soukpots.jpg', featured: true, description: 'Hand-thrown ceramic bowl set with reactive glaze.', rating: 5, artisanName: 'Sarah Martinez' },
   { id: 2, title: 'Artisan Woven Basket', price: 65.00, image: '/assets/product-2.jpeg', featured: true, description: 'Handwoven storage basket using natural fibers.', rating: 5, artisanName: 'Maria Chen' },
   { id: 3, title: 'Handmade Silver Necklace', price: 120.00, image: '/assets/product-3.jpeg', featured: false, description: 'Handcrafted silver necklace with unique stone setting.', rating: 4.5, artisanName: 'Emma Thompson' },
   { id: 4, title: 'Wooden Serving Bowls', price: 75.00, image: '/assets/product-4.png', featured: false, description: 'Turned wooden serving bowls finished with food-safe oil.', rating: 5, artisanName: 'James Walker' },
-  { id: 5, title: 'Natural Soy Candle Set', price: 45.00, image: '/assets/product-5.png', featured: false, description: 'Hand-poured soy candles with natural fragrances.', rating: 4.5, artisanName: 'Lisa Anderson' },
+  { id: 5, title: 'Natural Soy Candle Set', price: 45.00, image: '/assets/candle1.jpeg', featured: false, description: 'Hand-poured soy candles with natural fragrances.', rating: 4.5, artisanName: 'Lisa Anderson' },
   { id: 6, title: 'Leather Journal Cover', price: 55.00, image: '/assets/product-6.png', featured: false, description: 'Vegetable-tanned leather journal cover, stitched by hand.', rating: 5, artisanName: 'Michael Brown' },
   { id: 7, title: 'Ornate Ceramic Vase', price: 48.00, image: '/assets/pottery/Ornateceramic.jpg', featured: true, description: 'A hand-glazed ornate ceramic vase, perfect for flowers or as a decorative piece.', rating: 4.7, artisanName: 'Pottery Collective' },
   { id: 8, title: 'Essaouira Decorative Pot', price: 55.00, image: '/assets/pottery/essaouirapot.jpg', featured: true, description: 'Decorative pot hand-painted with coastal motifs from Essaouira.', rating: 4.8, artisanName: 'Pottery Collective' },
@@ -26,9 +26,9 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: 12, title: 'Set of Stoneware Mugs', price: 58.00, image: '/assets/product-5.png', featured: true, description: 'Durable stoneware mugs, each with a unique speckled glaze.', rating: 4.9, artisanName: 'Clay & Co.' },
   { id: 13, title: 'Engraved Wooden Spoon', price: 18.00, image: '/assets/product-6.png', featured: false, description: 'Hand-carved wooden spoon with decorative engraving.', rating: 5, artisanName: 'James Walker' },
   { id: 14, title: 'Scented Candle Trio', price: 29.00, image: '/assets/candle1.jpeg', featured: false, description: 'Three small soy candles in seasonal fragrances.', rating: 4.7, artisanName: 'Lisa Anderson' }
-  ,{ id: 15, title: 'Blue Glaze Serving Plate', price: 42.00, image: '/assets/product-1.jpeg', featured: true, description: 'Wheel-thrown serving plate with a glossy blue glaze.', rating: 4.8, artisanName: 'Azure Pottery' },
+  ,{ id: 15, title: 'Blue Glaze Serving Plate', price: 42.00, image: '/assets/pottery/Ornateceramic.jpg', featured: true, description: 'Wheel-thrown serving plate with a glossy blue glaze.', rating: 4.8, artisanName: 'Azure Pottery' },
   { id: 16, title: 'Handloom Table Runner', price: 72.00, image: '/assets/product-2.jpeg', featured: false, description: 'Handloomed table runner using natural dyes and fibers.', rating: 4.6, artisanName: 'Weave House' },
-  { id: 17, title: 'Ceramic Oil Bottle', price: 22.00, image: '/assets/pottery/Ornateceramic.jpg', featured: false, description: 'Small ceramic oil bottle with an elegant spout.', rating: 4.5, artisanName: 'Pottery Collective' },
+  { id: 17, title: 'Ceramic Oil Bottle', price: 22.00, image: '/assets/pottery/essaouirapot.jpg', featured: false, description: 'Small ceramic oil bottle with an elegant spout.', rating: 4.5, artisanName: 'Pottery Collective' },
   { id: 18, title: 'Mini Succulent Planters (Set of 3)', price: 36.00, image: '/assets/product-4.png', featured: true, description: 'Small planters perfect for succulents and small herbs.', rating: 4.9, artisanName: 'Green Studio' },
   { id: 19, title: 'Rustic Cutting Board', price: 32.00, image: '/assets/product-6.png', featured: false, description: 'Hand-sanded cutting board finished with food-safe oil.', rating: 4.7, artisanName: 'James Walker' },
   { id: 20, title: 'Lavender Candle', price: 14.00, image: '/assets/candle1.jpeg', featured: true, description: 'Single lavender-scented soy candle for a calming atmosphere.', rating: 4.8, artisanName: 'Lisa Anderson' }
@@ -74,19 +74,15 @@ export default function Home() {
           }
         }
 
-        // If the API returned few featured items, supplement with sample featured products
-        const TARGET_COUNT = 6
-        if (mapped.length < TARGET_COUNT) {
+        // If we got API results, use all of them, otherwise supplement with sample featured products
+        if (mapped.length > 0) {
+          setProducts(mapped)
+        } else {
+          // Only supplement if API returned nothing
           const existingTitles = new Set(mapped.map((m: any) => m.title))
           const fallback = SAMPLE_PRODUCTS.filter((s: any) => s.featured && !existingTitles.has(s.title))
-          for (const fb of fallback) {
-            if (mapped.length >= TARGET_COUNT) break
-            // ensure fallback items have their own image property
-            mapped.push({ ...fb })
-          }
+          setProducts([...mapped, ...fallback])
         }
-
-        setProducts(mapped)
       } else {
         // Fallback to sample products if API fails
         setProducts(SAMPLE_PRODUCTS)
@@ -133,9 +129,6 @@ export default function Home() {
         <title>Handcrafted Haven - Unique Handmade Treasures</title>
         <meta name="description" content="Discover unique handcrafted treasures from local artisans. Support sustainable craftsmanship and bring authentic, handmade quality into your home." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
       </Head>
 
       <Header />
@@ -144,17 +137,22 @@ export default function Home() {
         <section className="hero" id="home">
           <div className="container hero-inner">
             <div className="hero-left">
-              <div className="kicker">Handmade with Love</div>
-              <h1>Discover Unique Handcrafted Treasures</h1>
+              <div className="kicker">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1l1.5 3 3.5.5-2.5 2.5.5 3.5L8 9.5 5 11l.5-3.5L3 5l3.5-.5L8 1z" fill="currentColor"/>
+                </svg>
+                Authentic Handcrafted Quality
+              </div>
+              <h1>Discover Unique <span>Handcrafted</span> Treasures</h1>
               <p className="lead">
-                Support local artisans and bring authentic, sustainable craftsmanship into your home. 
-                Every purchase tells a story and supports a creator's passion.
+                Shop directly from talented artisans around the world. Every piece tells a story, 
+                supports sustainable practices, and brings authentic craftsmanship into your home.
               </p>
               <div className="hero-cta">
                 <Link href="/shop" className="btn primary">
-                  Shop Now
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '8px' }}>
-                    <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  Explore Collection
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '8px' }}>
+                    <path d="M7.5 15l5-5-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </Link>
                 <Link href="/register?role=artisan" className="btn outline">Become a Seller</Link>
@@ -164,9 +162,10 @@ export default function Home() {
               <div className="hero-card">
                 <Image
                   src="/assets/avatar-2.png"
-                  alt="Handcrafted tools and materials"
-                  width={520}
-                  height={360}
+                  alt="Beautiful handcrafted products"
+                  width={600}
+                  height={450}
+                  priority
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
@@ -179,36 +178,34 @@ export default function Home() {
             <div className="feature">
               <div className="feature-icon">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="10" cy="12" r="2" fill="currentColor"/>
-                  <circle cx="16" cy="10" r="2" fill="currentColor"/>
-                  <circle cx="22" cy="12" r="2" fill="currentColor"/>
-                  <path d="M8 20c0-2 2-4 4-4h8c2 0 4 2 4 4v4H8v-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 4L4 10v6c0 7.18 4.84 13.91 12 16 7.16-2.09 12-8.82 12-16v-6L16 4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 16l4 4 8-8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h4>100% Authentic</h4>
+              <p>Every item is carefully vetted and comes directly from verified artisans. Guaranteed quality and craftsmanship.</p>
+            </div>
+            <div className="feature">
+              <div className="feature-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="11" r="3" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M8 26c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M24 12c1.1 0 2-.9 2-2s-.9-2-2-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M26 19c2 .5 3 2 3 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
               <h4>Support Artisans</h4>
-              <p>Every purchase directly supports independent makers and their craft.</p>
+              <p>Your purchase directly supports independent makers and helps preserve traditional crafts for future generations.</p>
             </div>
             <div className="feature">
               <div className="feature-icon">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 4L4 10v6c0 6.627 5.373 12 12 12s12-5.373 12-12v-6L16 4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 16l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M28 16c0 6.627-5.373 12-12 12S4 22.627 4 16 9.373 4 16 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M16 4c3.5 0 6.5 1.5 8 4M26 10l-10 10-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <h4>Quality Guaranteed</h4>
-              <p>Each item is carefully curated and crafted with attention to detail.</p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="6" y="8" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6 12h20M10 16h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 20h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 6l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h4>Sustainable Choice</h4>
-              <p>Eco-friendly materials and practices for a better tomorrow.</p>
+              <h4>Eco-Friendly</h4>
+              <p>Sustainable materials and ethical production methods. Make choices that are good for you and the planet.</p>
             </div>
           </div>
         </section>
@@ -217,13 +214,13 @@ export default function Home() {
           <div className="container">
             <div className="section-head">
               <div>
-                <h2>Featured Creations</h2>
-                <p className="muted">Handpicked treasures from our talented community</p>
+                <h2>Featured Collection</h2>
+                <p className="muted">Handpicked treasures from our most talented artisans</p>
               </div>
               <Link href="/shop" className="view-all">
-                View All
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '6px', display: 'inline-block', verticalAlign: 'middle' }}>
-                  <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                Browse All Products
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7.5 15l5-5-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </Link>
             </div>
@@ -244,10 +241,10 @@ export default function Home() {
         <section className="artisans" id="about">
           <div className="container">
             <div className="section-head center">
-              <h2>Meet Our Artisans</h2>
+              <h2>Meet Our Master Artisans</h2>
               <p className="muted">
-                Get to know the talented makers behind the crafts. Each artisan brings their unique story, 
-                skill, and passion to every creation.
+                Connect with the talented creators behind each piece. Every artisan brings years of experience, 
+                dedication, and passion to their craft, creating heirloom-quality pieces you'll treasure forever.
               </p>
             </div>
 
@@ -255,10 +252,10 @@ export default function Home() {
               <div className="artist-card">
                 <Image
                   className="avatar"
-                  src="/assets/avatar-1.jpeg"
+                  src="/assets/profile/avatar-1.JPG"
                   alt="Sarah Martinez"
-                  width={64}
-                  height={64}
+                  width={140}
+                  height={140}
                 />
                 <div className="artist-rating">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -276,10 +273,10 @@ export default function Home() {
               <div className="artist-card">
                 <Image
                   className="avatar"
-                  src="/assets/avatar-2.jpeg"
+                  src="/assets/profile/avatar-2.jpeg"
                   alt="Maria Chen"
-                  width={64}
-                  height={64}
+                  width={140}
+                  height={140}
                 />
                 <div className="artist-rating">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -297,10 +294,10 @@ export default function Home() {
               <div className="artist-card">
                 <Image
                   className="avatar"
-                  src="/assets/avatar-3.svg"
+                  src="/assets/profile/avatar-3.jpg"
                   alt="James Walker"
-                  width={64}
-                  height={64}
+                  width={140}
+                  height={140}
                 />
                 <div className="artist-rating">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -329,15 +326,15 @@ export default function Home() {
 
         <section className="cta-band" id="community">
           <div className="container cta-inner">
-            <h2>Are You an Artisan?</h2>
-            <p className="lead muted">
-              Join our community of talented makers. Share your craft with the world and connect with 
-              customers who value handmade quality.
+            <h2>Ready to Share Your Craft?</h2>
+            <p className="lead">
+              Join our thriving community of artisans and reach customers who value quality, authenticity, 
+              and the story behind each handmade piece. Start your journey today.
             </p>
             <Link href="/register?role=artisan" className="btn primary dark">
               Start Selling Today
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '8px' }}>
-                <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '8px' }}>
+                <path d="M7.5 15l5-5-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </Link>
           </div>
