@@ -253,23 +253,44 @@ export default function Shop({ initialProducts = [], categories = [] }: ShopProp
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const { category, search } = context.query as any
-    await connectMongoose()
+    const conn = await connectMongoose()
+    
+    // If connection failed, return with no initial products (client will fetch)
+    if (!conn) {
+      console.warn('MongoDB not connected in getServerSideProps, returning empty')
+      return { 
+        props: { initialProducts: [], categories: [] },
+        revalidate: 60 // ISR: revalidate every 60 seconds
+      }
+    }
 
     const filter: any = {}
     if (category) filter.category = category
     if (search) filter.$text = { $search: search }
 
-    const products = await ProductModel.find(filter).sort({ createdAt: -1 }).limit(200).lean()
+    const products = await ProductModel.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean()
+      .timeout(10000) // 10 second timeout for the query
+
+    if (!products || products.length === 0) {
+      console.warn('No products found in database')
+      return {
+        props: { initialProducts: [], categories: [] },
+        revalidate: 60
+      }
+    }
 
     const serialized = products.map((p: any) => ({
-      id: p._id.toString(),
-      title: p.title,
+      id: p._id ? p._id.toString() : `product-${Math.random()}`,
+      title: p.title || 'Untitled Product',
       price: (p.price ?? 0).toString(),
-      image_url: (p.image_url || (p.images && p.images[0] && p.images[0].url) || (p.images && p.images[0] && p.images[0].url) || '/assets/product-1.jpeg'),
+      image_url: (p.image_url || (p.images && p.images[0] && p.images[0].url) || '/assets/product-1.jpeg'),
       featured: !!p.featured,
       description: p.description || p.shortDescription || '',
       rating: p.rating || 5,
-      artisan_name: (p.artisan && p.artisan.name) || (p.artisan && p.artisan.name) || 'Artisan',
+      artisan_name: (p.artisan && p.artisan.name) || 'Artisan',
       category: p.category || 'Uncategorized',
     }))
 
@@ -281,10 +302,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     ])
     const categories = (catAgg || []).map((c: any) => ({ value: c._id, count: c.count }))
 
-    return { props: { initialProducts: serialized, categories } }
+    return { 
+      props: { initialProducts: serialized, categories },
+      revalidate: 60 // ISR: revalidate every 60 seconds
+    }
   } catch (err) {
     console.error('getServerSideProps error (shop):', err)
-    return { props: { initialProducts: [] } }
+    return { 
+      props: { initialProducts: [], categories: [] },
+      revalidate: 60 // ISR: revalidate every 60 seconds even on error
+    }
   }
 }
 
