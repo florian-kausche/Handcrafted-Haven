@@ -21,7 +21,7 @@ export default function Footer({ onSubscribe, subscribed }: FooterProps) {
           />
           <p className="muted">Supporting local artisans and sustainable craftsmanship since 2020.</p>
           <div className="social-icons">
-            <a href="#" aria-label="Instagram" className="social-icon">
+            <a href="https://www.instagram.com/motivationalflo/" aria-label="Instagram" className="social-icon" target="_blank" rel="noopener noreferrer">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="2" y="2" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="1.5"/>
                 <circle cx="10" cy="10" r="3.5" stroke="currentColor" strokeWidth="1.5"/>
