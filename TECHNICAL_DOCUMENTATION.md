@@ -1,7 +1,7 @@
 # Handcrafted Haven - Technical Documentation
 
-**Version:** 1.0.0  
-**Last Updated:** December 5, 2025  
+**Version:** 2.0.0  
+**Last Updated:** December 6, 2025  
 **Status:** Production Ready  
 **Author:** Development Team
 
@@ -18,9 +18,12 @@
 7. [API Documentation](#api-documentation)
 8. [Database Schema](#database-schema)
 9. [Authentication & Security](#authentication--security)
-10. [Deployment Guide](#deployment-guide)
-11. [Troubleshooting](#troubleshooting)
-12. [Contributing Guidelines](#contributing-guidelines)
+10. [Newsletter Subscription System](#newsletter-subscription-system)
+11. [Product Catalog](#product-catalog)
+12. [Reviews & Ratings](#reviews--ratings)
+13. [Deployment Guide](#deployment-guide)
+14. [Troubleshooting](#troubleshooting)
+15. [Contributing Guidelines](#contributing-guidelines)
 
 ---
 
@@ -34,12 +37,21 @@
 - Enable artisans to manage and sell their products
 - Ensure secure transactions and user data protection
 - Deliver a professional, responsive user experience
+- Support customer engagement through newsletter subscriptions
+- Facilitate product discovery with reviews and ratings
 
 ### Target Users
 
-- **Customers**: Browse, purchase, and review handcrafted products
+- **Customers**: Browse 62+ products across 6 categories, purchase, and review
 - **Artisans**: Create profiles, upload products, track sales
 - **Administrators**: Manage platform operations and content
+
+### Current Statistics
+
+- **62+ Products** across 6 handcrafted categories
+- **Product Reviews** with 1-5 star ratings
+- **Newsletter Subscription** with animated confirmation modal
+- **Multiple Support Pages** (Contact, FAQs, Shipping, Privacy)
 
 ---
 
@@ -206,33 +218,59 @@ handcrafted-haven/
 │   │
 │   ├── components/                    # Reusable React components
 │   │   ├── Header.tsx                # Navigation header
-│   │   ├── Footer.tsx                # Footer component
+│   │   ├── Footer.tsx                # Footer with category links
 │   │   ├── ProductCard.tsx           # Product card display
-│   │   └── Modal.tsx                 # Modal dialogs
+│   │   ├── Modal.tsx                 # Modal dialogs
+│   │   ├── SubscriptionModal.tsx    # Newsletter confirmation modal
+│   │   └── PageLoader.tsx           # Loading component
 │   │
 │   ├── contexts/                      # React Context providers
 │   │   ├── AuthContext.tsx           # Authentication state
-│   │   └── CartContext.tsx           # Shopping cart state
+│   │   ├── CartContext.tsx           # Shopping cart state
+│   │   └── SubscriptionContext.tsx  # Newsletter subscription hook
+│   │
+│   ├── models/                        # Mongoose models
+│   │   ├── User.ts                   # User accounts
+│   │   ├── Artisan.ts               # Artisan profiles
+│   │   ├── Product.ts               # Product catalog
+│   │   ├── CartItem.ts              # Cart items
+│   │   ├── Order.ts                 # Orders
+│   │   └── Review.ts                # Product reviews
 │   │
 │   ├── lib/                           # Utility functions
 │   │   ├── api.ts                    # API client functions
 │   │   ├── auth.ts                   # Authentication helpers
-│   │   └── db.ts                     # Database connection
+│   │   ├── mongoose.ts              # MongoDB connection
+│   │   ├── db.ts                     # Database utilities
+│   │   └── mailer.ts                # Email utilities
 │   │
 │   ├── styles/                        # Global styles
 │   │   └── globals.css               # CSS custom properties & styles
 │   │
 │   └── types/                         # TypeScript type definitions
+│       └── types.ts
 │
 ├── public/                            # Static assets
 │   └── assets/
 │       ├── profile/                  # User avatar images
-│       ├── pottery/                  # Product category images
-│       └── [product images]
+│       ├── pottery/                  # Pottery & Ceramics (22 products)
+│       ├── Candles/                 # Candles (10 products)
+│       ├── Jewelry/                 # Jewelry (10 products)
+│       ├── Leather/                 # Leather goods (10 products)
+│       ├── Textiles&Weaving/       # Textiles (10 products)
+│       └── Woodwork/                # Woodwork (10 products)
 │
 ├── scripts/                           # Utility scripts
 │   ├── init-db.ts                    # Database initialization
-│   └── seed-db.ts                    # Sample data generation
+│   ├── seed-db.ts                    # Sample data generation
+│   ├── seed-mongo.ts                 # MongoDB seeding
+│   ├── add-candles.js               # Add candle products
+│   ├── add-jewelry.js               # Add jewelry products
+│   ├── add-leather.js               # Add leather products
+│   ├── add-pottery.js               # Add pottery products
+│   ├── add-textiles.js              # Add textile products
+│   ├── add-woodwork.js              # Add woodwork products
+│   └── add-reviews.js               # Add product reviews
 │
 ├── .env.local                         # Environment variables (not in git)
 ├── .gitignore                         # Git ignore rules
@@ -363,6 +401,31 @@ User Input → Validation → Hash Password → Store in DB → Generate JWT →
 
 - `src/contexts/AuthContext.tsx` (lines 44-72)
 - `src/pages/login.tsx` (timeout message)
+
+### 7. Support Pages
+
+**Contact Page** (`/contact`):
+
+- Contact form with validation
+- Business information (email, phone, address)
+- Business hours display
+- FAQs section with anchor link (`#faqs`)
+- Shipping & Returns policy section (`#shipping`)
+
+**Privacy Policy** (`/privacy`):
+
+- Comprehensive privacy information
+- Data collection and usage policies
+- User rights and choices
+- Cookie and tracking information
+- Contact information for privacy concerns
+
+**About Page** (`/about`):
+
+- Company mission and values
+- "What We Stand For" principles
+- Call-to-action buttons
+- Supporting local artisans message
 
 ---
 
@@ -756,6 +819,26 @@ Get user's order history.
 }
 ```
 
+### Reviews Collection
+
+```javascript
+{
+  _id: ObjectId,
+  user: ObjectId (ref: User, required),
+  product: ObjectId (ref: Product, required),
+  rating: Number (required, min: 1, max: 5),
+  comment: String (required),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Indexes**:
+
+- `product`: For efficient product review queries
+- `user`: For user review history
+- `createdAt`: For sorting by date
+
 ---
 
 ## Authentication & Security
@@ -805,6 +888,329 @@ const isValid = await bcrypt.compare(inputPassword, hashedPassword);
 ✅ **Use environment variables for secrets**  
 ✅ **Implement rate limiting on auth endpoints**  
 ✅ **Log authentication events**
+
+---
+
+## Newsletter Subscription System
+
+### Overview
+
+The newsletter subscription system allows users to subscribe to receive updates about new artisans, products, and exclusive offers. Features a beautiful animated confirmation modal.
+
+### Components
+
+#### SubscriptionModal Component
+
+**Location**: `src/components/SubscriptionModal.tsx`
+
+**Features**:
+
+- Animated checkmark with SVG stroke animation
+- Smooth fade-in and slide-down animations
+- Email confirmation display
+- Close button and auto-dismiss functionality
+- Responsive design with mobile support
+
+**Animations**:
+
+```typescript
+- fadeIn: 0.3s ease-out (modal background)
+- slideInDown: 0.4s ease-out (modal content)
+- checkmark: 0.6s ease-out (SVG path animation)
+```
+
+#### useSubscription Hook
+
+**Location**: `src/contexts/SubscriptionContext.tsx`
+
+**Provides**:
+
+- `subscribed`: Boolean state
+- `subscribedEmail`: Stored email address
+- `showSubscriptionModal`: Modal visibility state
+- `handleSubscribe`: Async subscription handler
+
+**Usage Example**:
+
+```typescript
+const { subscribed, subscribedEmail, showSubscriptionModal,
+        setShowSubscriptionModal, handleSubscribe } = useSubscription()
+
+<Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+<SubscriptionModal
+  isOpen={showSubscriptionModal}
+  email={subscribedEmail}
+  onClose={() => setShowSubscriptionModal(false)}
+/>
+```
+
+### API Endpoint
+
+#### POST /api/newsletter
+
+Subscribe user to newsletter.
+
+**Request**:
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response** (200):
+
+```json
+{
+  "success": true,
+  "message": "Successfully subscribed to our newsletter",
+  "email": "user@example.com"
+}
+```
+
+**Error Response** (400):
+
+```json
+{
+  "error": "Invalid email address"
+}
+```
+
+**Implementation**:
+
+- Email validation (regex pattern)
+- In-memory storage (can be upgraded to MongoDB collection)
+- Duplicate prevention
+- Error handling with detailed messages
+
+### Integration
+
+The subscription system is integrated across all pages:
+
+- index.tsx (Home)
+- shop.tsx
+- about.tsx
+- contact.tsx
+- privacy.tsx
+- login.tsx
+- register.tsx
+- seller.tsx
+
+---
+
+## Product Catalog
+
+### Overview
+
+Handcrafted Haven features a comprehensive product catalog with 62+ handcrafted items organized across 6 categories.
+
+### Product Categories
+
+| Category               | Product Count | Examples                                                      |
+| ---------------------- | ------------- | ------------------------------------------------------------- |
+| **Pottery & Ceramics** | 22            | Ornate Vase, Decorative Pots, Tajines, Planters, Tea Sets     |
+| **Leather**            | 10            | Tote Bags, Belts, Wallets, Jackets, Shoes, Hand Drums         |
+| **Candles**            | 10            | Lavender, Rose, Vanilla, Citrus, Pine, Jasmine, Sandalwood    |
+| **Jewelry**            | 10            | Gold Necklace, Silver Bracelet, Gemstone Earrings, Pearl Ring |
+| **Textiles & Weaving** | 10            | Scarves, Blankets, Rugs, Woven Baskets, Tote Bags             |
+| **Woodwork**           | 10            | Rustic Bench, Minimalist Desk, Bowls, Trays, Cutting Boards   |
+
+### Product Data Structure
+
+Each product includes:
+
+- **Basic Info**: title, description, category, price
+- **Images**: Array of image URLs with fallback support
+- **Artisan**: Reference to artisan profile
+- **Ratings**: Average rating (1-5 stars)
+- **Reviews**: Count and collection of customer reviews
+- **Metadata**: SKU, slug, featured status, variants
+- **Timestamps**: Created and updated dates
+
+### Image Management
+
+**Storage Location**: `/public/assets/[Category]/`
+
+**Categories**:
+
+- `/public/assets/Candles/` - 10 candle product images
+- `/public/assets/Jewelry/` - 10 jewelry product images
+- `/public/assets/Leather/` - 10 leather goods images
+- `/public/assets/pottery/` - 22 pottery & ceramics images
+- `/public/assets/Textiles&Weaving/` - 10 textile images
+- `/public/assets/Woodwork/` - 10 woodwork images
+
+**Image Formats**: JPG, PNG, JPEG
+**Naming Convention**: Descriptive names (e.g., `lavender-candle.jpg`, `ornate-vase.jpg`)
+
+### Product Seeding Scripts
+
+Located in `/scripts/`:
+
+```bash
+node scripts/add-candles.js      # Seeds 10 candle products
+node scripts/add-jewelry.js      # Seeds 10 jewelry products
+node scripts/add-leather.js      # Seeds 10 leather products
+node scripts/add-pottery.js      # Seeds 10 pottery products
+node scripts/add-textiles.js     # Seeds 10 textile products
+node scripts/add-woodwork.js     # Seeds 10 woodwork products
+```
+
+Each script:
+
+1. Connects to MongoDB
+2. Creates products with proper data structure
+3. Sets appropriate image paths
+4. Inserts into products collection
+5. Confirms insertion count
+
+### Shop Page Features
+
+**Location**: `src/pages/shop.tsx`
+
+**Functionality**:
+
+- Category filtering (All + 6 categories)
+- Product search
+- Server-side rendering (SSR) with getServerSideProps
+- Product count display per category
+- Responsive grid layout
+- "View All" buttons for each category
+
+**Category Aggregation**:
+
+```typescript
+const catAgg = await ProductModel.aggregate([
+  { $match: {} },
+  {
+    $group: {
+      _id: { $ifNull: ["$category", "Uncategorized"] },
+      count: { $sum: 1 },
+    },
+  },
+  { $sort: { count: -1 } },
+]);
+```
+
+---
+
+## Reviews & Ratings
+
+### Overview
+
+Customers can leave reviews with ratings (1-5 stars) and comments on products they've purchased or browsed.
+
+### Review Schema
+
+**Location**: `src/models/Review.ts`
+
+```javascript
+{
+  _id: ObjectId,
+  user: ObjectId (ref: User, required),
+  product: ObjectId (ref: Product, required),
+  rating: Number (required, min: 1, max: 5),
+  comment: String (required),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Features
+
+- **Star Ratings**: 1-5 stars (integer values)
+- **Comments**: Text feedback from customers
+- **User Attribution**: Links to user account
+- **Product Association**: Links to specific product
+- **Timestamps**: Track when reviews were created
+- **Average Calculation**: Auto-calculated product rating
+
+### API Endpoints
+
+#### POST /api/products/[id]/reviews
+
+Add a review to a product.
+
+**Request**:
+
+```json
+{
+  "rating": 5,
+  "comment": "Excellent quality! Highly recommended."
+}
+```
+
+**Response** (201):
+
+```json
+{
+  "success": true,
+  "review": {
+    "_id": "review_id",
+    "rating": 5,
+    "comment": "Excellent quality!",
+    "product": "product_id",
+    "user": "user_id"
+  }
+}
+```
+
+#### GET /api/products/[id]/reviews
+
+Get all reviews for a product.
+
+**Response** (200):
+
+```json
+{
+  "reviews": [
+    {
+      "_id": "review_id",
+      "rating": 5,
+      "comment": "Excellent quality!",
+      "user": { "firstName": "John", "lastName": "D." },
+      "createdAt": "2025-12-05T10:00:00Z"
+    }
+  ],
+  "averageRating": 4.8,
+  "totalReviews": 12
+}
+```
+
+### Product Rating Calculation
+
+Products store two fields:
+
+- `rating`: Average rating (calculated)
+- `total_reviews`: Count of reviews
+
+**Calculation Logic**:
+
+```typescript
+const reviews = await Review.find({ product: productId });
+const avgRating =
+  reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+await Product.findByIdAndUpdate(productId, {
+  rating: avgRating,
+  total_reviews: reviews.length,
+});
+```
+
+### Sample Reviews
+
+Added via `scripts/add-reviews.js`:
+
+- **Minimalist Wood Desk**: 3 reviews, avg rating 4.7
+- **Rustic Wooden Bench**: 3 reviews, avg rating 5.0
+- **Colorblock Woven Tote**: 4 reviews, avg rating 4.5
+- **Ornate Ceramic Vase**: 2 reviews, avg rating 5.0
+- **Peppermint Candle**: 2 reviews, avg rating 4.5
+
+### Display Components
+
+**ProductCard.tsx**: Shows star rating and review count
+**Product Detail Page**: Full review list with user names and dates
+**Shop Page**: Displays average rating for filtering
 
 ---
 

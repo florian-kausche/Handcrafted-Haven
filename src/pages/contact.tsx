@@ -2,8 +2,11 @@ import React, { useState } from 'react'
 import Head from 'next/head'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SubscriptionModal from '../components/SubscriptionModal'
+import { useSubscription } from '../contexts/SubscriptionContext'
 
 export default function Contact() {
+  const { subscribed, subscribedEmail, showSubscriptionModal, setShowSubscriptionModal, handleSubscribe } = useSubscription()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -141,10 +144,82 @@ export default function Contact() {
               </form>
             </div>
           </div>
+
+          {/* FAQs Section */}
+          <div style={{ marginTop: '80px', paddingTop: '40px', borderTop: '1px solid var(--border)' }} id="faqs">
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', marginBottom: '24px' }}>Frequently Asked Questions</h2>
+            
+            <div style={{ display: 'grid', gap: '24px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>How long does shipping take?</h3>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>Most orders are processed within 1–2 business days. Shipping typically takes 3–7 business days depending on your location. Expedited options are available at checkout.</p>
+              </div>
+              
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Can I return or exchange an item?</h3>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>Yes! We offer 30-day returns on most items in unused condition. See our full Shipping & Returns policy below for details.</p>
+              </div>
+              
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Do you ship internationally?</h3>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>Currently, we ship within the United States. International shipping coming soon! Contact us if you're interested in a specific location.</p>
+              </div>
+              
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Are the products vegan/sustainable?</h3>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>Each artisan has unique practices. Check individual product pages for material and sustainability information, or contact us for specific questions.</p>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>How do I become a seller?</h3>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>Ready to share your craft? <a href="/register?role=artisan" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>Apply as an artisan</a> and we'll review your application within 3–5 business days.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Shipping & Returns Section */}
+          <div style={{ marginTop: '80px', paddingTop: '40px', borderTop: '1px solid var(--border)' }} id="shipping">
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', marginBottom: '24px' }}>Shipping & Returns</h2>
+            
+            <div style={{ display: 'grid', gap: '24px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Shipping Policy</h3>
+                <ul style={{ color: 'var(--muted)', lineHeight: '1.7', paddingLeft: '20px', margin: '0' }}>
+                  <li>Orders are processed within 1–2 business days (excluding weekends and holidays)</li>
+                  <li>Standard shipping: 3–7 business days (free on orders over $75)</li>
+                  <li>Expedited shipping: 1–2 business days (flat rate $15)</li>
+                  <li>You'll receive tracking information via email once your order ships</li>
+                  <li>We ship to all continental US addresses</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Return & Exchange Policy</h3>
+                <ul style={{ color: 'var(--muted)', lineHeight: '1.7', paddingLeft: '20px', margin: '0' }}>
+                  <li>30-day return window from delivery date</li>
+                  <li>Items must be unused and in original condition with packaging</li>
+                  <li>Customer pays return shipping unless there's a defect</li>
+                  <li>Refunds processed within 5–7 business days of receipt</li>
+                  <li>Exchanges: Free shipping on replacement items</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Damaged or Lost Orders</h3>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>If your order arrives damaged or is lost in transit, please contact us within 7 days with photos and tracking information. We'll arrange a replacement or refund immediately.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 
-      <Footer onSubscribe={() => {}} subscribed={false} />
+      <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </>
   )
 }

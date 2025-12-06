@@ -7,6 +7,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import Modal from '../components/Modal'
+import SubscriptionModal from '../components/SubscriptionModal'
 import { useCart } from '../contexts/CartContext'
 import { productsAPI } from '../lib/api'
 import type { Product, CartItem } from '../types'
@@ -41,6 +42,8 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showCart, setShowCart] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
+  const [subscribedEmail, setSubscribedEmail] = useState('')
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const { addItem, items: cartItems, showToast } = useCart()
 
   useEffect(() => {
@@ -111,16 +114,39 @@ export default function Home() {
     }
   }
 
-  function handleSubscribe(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubscribe(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
     const email = (form.elements[0] as HTMLInputElement).value
+    
     if (!email || !email.includes('@')) {
       showToast?.('Please enter a valid email')
       return
     }
-    localStorage.setItem('hh_newsletter', email)
-    setSubscribed(true)
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        showToast?.(data.error || 'Failed to subscribe')
+        return
+      }
+
+      localStorage.setItem('hh_newsletter', email)
+      setSubscribedEmail(email)
+      setSubscribed(true)
+      setShowSubscriptionModal(true)
+      form.reset()
+    } catch (error) {
+      console.error('Subscription error:', error)
+      showToast?.('An error occurred. Please try again.')
+    }
   }
 
   return (
@@ -349,6 +375,12 @@ export default function Home() {
         type="product"
         product={selectedProduct || undefined}
         onAddToCart={handleAddToCart}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
       />
     </>
   )

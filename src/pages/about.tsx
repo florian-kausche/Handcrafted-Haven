@@ -3,8 +3,11 @@ import Image from 'next/image'
 import Head from 'next/head'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SubscriptionModal from '../components/SubscriptionModal'
+import { useSubscription } from '../contexts/SubscriptionContext'
 
 export default function About() {
+  const { subscribed, subscribedEmail, showSubscriptionModal, setShowSubscriptionModal, handleSubscribe } = useSubscription()
   return (
     <>
       <Head>
@@ -83,7 +86,13 @@ export default function About() {
         </div>
       </main>
 
-      <Footer onSubscribe={() => {}} subscribed={false} />
+      <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </>
   )
 }

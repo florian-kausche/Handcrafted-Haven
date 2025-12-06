@@ -5,9 +5,11 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SubscriptionModal from '../components/SubscriptionModal'
 import ProductCard from '../components/ProductCard'
 import { productsAPI } from '../lib/api'
 import { useCart } from '../contexts/CartContext'
+import { useSubscription } from '../contexts/SubscriptionContext'
 import connectMongoose from '../lib/mongoose'
 import ProductModel from '../models/Product'
 import type { Product } from '../types'
@@ -49,6 +51,7 @@ export default function Shop({ initialProducts = [], categories = [] }: ShopProp
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [availableCategories, setAvailableCategories] = useState<CategoryCount[]>(categories || [])
   const { addItem } = useCart()
+  const { subscribed, subscribedEmail, showSubscriptionModal, setShowSubscriptionModal, handleSubscribe } = useSubscription()
 
   const fallbackCats = ['All', 'Pottery & Ceramics', 'Jewelry', 'Textiles & Weaving', 'Woodwork', 'Candles', 'Leather']
 
@@ -236,7 +239,13 @@ export default function Shop({ initialProducts = [], categories = [] }: ShopProp
         </div>
       </main>
 
-      <Footer onSubscribe={() => {}} subscribed={false} />
+      <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </>
   )
 }

@@ -8,15 +8,17 @@ A modern, full-featured e-commerce platform built with Next.js, TypeScript, and 
 
 - ✅ Home page with featured products
 - ✅ Shop page with category filtering and search
-- ✅ Product detail pages with reviews
+- ✅ Product detail pages with reviews and ratings
 - ✅ Shopping cart functionality
-- ✅ Checkout process
+- ✅ Checkout process with PayPal simulation
 - ✅ User authentication (login/register)
 - ✅ User account dashboard with order history
 - ✅ Seller dashboard for artisans
-- ✅ About and Contact pages
+- ✅ About, Contact, and Privacy Policy pages
+- ✅ Newsletter subscription with confirmation modal
+- ✅ FAQs and Shipping & Returns information
 - ✅ Responsive design
-- ✅ Professional UI/UX
+- ✅ Professional UI/UX with animations
 
 ### Backend
 
@@ -24,10 +26,21 @@ A modern, full-featured e-commerce platform built with Next.js, TypeScript, and 
 - ✅ RESTful API routes
 - ✅ JWT-based authentication
 - ✅ User management
-- ✅ Product management
+- ✅ Product management (62+ handcrafted products across 6 categories)
 - ✅ Cart management
 - ✅ Order processing
+- ✅ Newsletter subscription API
+- ✅ Product reviews and ratings system
 - ✅ Secure password hashing
+
+### Product Categories
+
+- 🏺 **Pottery & Ceramics** (22 products) - Handmade vases, pots, planters, and more
+- 🧥 **Leather** (10 products) - Tote bags, belts, wallets, jackets, shoes
+- 🕯️ **Candles** (10 products) - Lavender, Rose, Vanilla, Citrus, and more scents
+- 💍 **Jewelry** (10 products) - Necklaces, bracelets, earrings, rings
+- 🧶 **Textiles & Weaving** (10 products) - Scarves, blankets, rugs, baskets
+- 🪑 **Woodwork** (10 products) - Furniture, bowls, cutting boards, decor
 
 ## Tech Stack
 
@@ -123,10 +136,10 @@ The application uses Mongoose models which map to MongoDB collections:
 
 - **users** - User accounts (customers and artisans)
 - **artisans** - Artisan profiles
-- **products** - Product catalog
+- **products** - Product catalog (62+ handcrafted items across 6 categories)
 - **cartitems** - Shopping cart items
 - **orders** - Order records
-- **reviews** - Product reviews
+- **reviews** - Product reviews with ratings (1-5 stars)
 
 ## API Routes
 
@@ -139,8 +152,10 @@ The application uses Mongoose models which map to MongoDB collections:
 
 ### Products
 
-- `GET /api/products` - Get all products (with filters)
+- `GET /api/products` - Get all products (with filters, category, search)
 - `GET /api/products/[id]` - Get product by ID
+- `GET /api/products/seller` - Get seller's products
+- `POST /api/products/[id]/reviews` - Add product review
 
 ### Cart
 
@@ -152,45 +167,118 @@ The application uses Mongoose models which map to MongoDB collections:
 
 - `GET /api/orders` - Get user's orders
 - `POST /api/orders` - Create new order
+- `GET /api/orders/[id]` - Get order details
+- `POST /api/orders/paypal/simulate` - Simulate PayPal payment
+
+### Newsletter
+
+- `POST /api/newsletter` - Subscribe to newsletter
 
 ## Project Structure
 
 ```
 ├── src/
 │   ├── components/      # Reusable React components
-│   ├── contexts/        # React contexts (Auth, Cart)
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   ├── ProductCard.tsx
+│   │   ├── Modal.tsx
+│   │   ├── SubscriptionModal.tsx
+│   │   └── PageLoader.tsx
+│   ├── contexts/        # React contexts (Auth, Cart, Subscription)
+│   │   ├── AuthContext.tsx
+│   │   ├── CartContext.tsx
+│   │   └── SubscriptionContext.tsx
 │   ├── lib/            # Utilities (DB, Auth, API)
+│   │   ├── mongoose.ts
+│   │   ├── auth.ts
+│   │   ├── api.ts
+│   │   ├── db.ts
+│   │   └── mailer.ts
+│   ├── models/         # Mongoose models
+│   │   ├── User.ts
+│   │   ├── Artisan.ts
+│   │   ├── Product.ts
+│   │   ├── CartItem.ts
+│   │   ├── Order.ts
+│   │   └── Review.ts
 │   ├── pages/          # Next.js pages and API routes
 │   │   ├── api/        # API endpoints
-│   │   ├── shop.tsx    # Shop page
-│   │   ├── product/    # Product detail pages
-│   │   ├── cart.tsx    # Cart page
+│   │   │   ├── auth/   # Authentication
+│   │   │   ├── products/ # Product management
+│   │   │   ├── cart/   # Cart operations
+│   │   │   ├── orders/ # Order processing
+│   │   │   └── newsletter.ts
+│   │   ├── index.tsx   # Home page
+│   │   ├── shop.tsx    # Shop page with filtering
+│   │   ├── product/[id].tsx # Product details
+│   │   ├── cart.tsx    # Shopping cart
 │   │   ├── checkout.tsx # Checkout page
 │   │   ├── account.tsx # User account
 │   │   ├── login.tsx   # Login page
-│   │   ├── register.tsx # Register page
-│   │   └── ...
+│   │   ├── register.tsx # Registration
+│   │   ├── about.tsx   # About page
+│   │   ├── contact.tsx # Contact with FAQs
+│   │   ├── privacy.tsx # Privacy policy
+│   │   └── seller/     # Seller dashboard
 │   └── styles/         # Global styles
+│       └── globals.css
 ├── public/             # Static assets
-└── scripts/            # Utility scripts
+│   └── assets/         # Product images by category
+│       ├── Candles/
+│       ├── Jewelry/
+│       ├── Leather/
+│       ├── pottery/
+│       ├── Textiles&Weaving/
+│       └── Woodwork/
+└── scripts/            # Database seed scripts
+    ├── seed-mongo.ts
+    ├── add-candles.js
+    ├── add-jewelry.js
+    ├── add-leather.js
+    ├── add-pottery.js
+    ├── add-textiles.js
+    ├── add-woodwork.js
+    └── add-reviews.js
 ```
 
 ## Features in Detail
 
 ### User Roles
 
-- **Customer**: Can browse, purchase, and review products
-- **Artisan**: Can create and manage products, view sales
+- **Customer**: Can browse, purchase, review products, and subscribe to newsletter
+- **Artisan**: Can create and manage products, view sales, upload images
 
 ### Shopping Flow
 
-1. Browse products on home or shop page
-2. View product details
-3. Add to cart
-4. Review cart
+1. Browse products on home or shop page (filter by 6 categories)
+2. View product details with reviews and ratings
+3. Add to cart with quantity selection
+4. Review cart and update quantities
 5. Checkout with shipping/billing info
-6. Place order
-7. View order history in account
+6. Simulate PayPal payment
+7. View order confirmation and history in account
+
+### Newsletter Subscription
+
+- Beautiful animated modal popup on successful subscription
+- Email validation and API endpoint
+- Persistent subscription state across pages
+- Reusable subscription hook for all pages
+
+### Product Categories & Reviews
+
+- **6 Product Categories**: Pottery & Ceramics, Leather, Candles, Jewelry, Textiles & Weaving, Woodwork
+- **62+ Products**: Fully populated catalog with images, descriptions, and prices
+- **Reviews System**: Customers can leave ratings (1-5 stars) and comments
+- **Average Ratings**: Automatically calculated and displayed
+
+### Support Pages
+
+- **Contact Page**: Contact form with business information
+- **FAQs Section**: Common questions and answers
+- **Shipping & Returns**: Detailed shipping and return policies
+- **Privacy Policy**: Comprehensive privacy information
 
 ### Authentication
 

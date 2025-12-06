@@ -5,6 +5,8 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SubscriptionModal from '../components/SubscriptionModal'
+import { useSubscription } from '../contexts/SubscriptionContext'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -13,6 +15,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const router = useRouter()
+  const { subscribed, subscribedEmail, showSubscriptionModal, setShowSubscriptionModal, handleSubscribe } = useSubscription()
 
   const isTimeout = router.query.timeout === 'true'
 
@@ -117,7 +120,13 @@ export default function Login() {
         </div>
       </main>
 
-      <Footer onSubscribe={() => {}} subscribed={false} />
+      <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </>
   )
 }

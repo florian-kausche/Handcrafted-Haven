@@ -44,9 +44,11 @@ export default function Footer({ onSubscribe, subscribed }: FooterProps) {
           <h4>Shop</h4>
           <ul>
             <li><Link href="/shop">All Products</Link></li>
-            <li><Link href="/shop?category=Pottery & Ceramics">Pottery & Ceramics</Link></li>
+            <li><Link href="/shop?category=Pottery %26 Ceramics">Pottery & Ceramics</Link></li>
+            <li><Link href="/shop?category=Leather">Leather</Link></li>
+            <li><Link href="/shop?category=Candles">Candles</Link></li>
             <li><Link href="/shop?category=Jewelry">Jewelry</Link></li>
-            <li><Link href="/shop?category=Textiles & Weaving">Textiles & Weaving</Link></li>
+            <li><Link href="/shop?category=Textiles %26 Weaving">Textiles & Weaving</Link></li>
             <li><Link href="/shop?category=Woodwork">Woodwork</Link></li>
           </ul>
         </div>
@@ -64,15 +66,23 @@ export default function Footer({ onSubscribe, subscribed }: FooterProps) {
           <h4>Stay Connected</h4>
           <p className="muted">Subscribe to discover new artisans and exclusive offers.</p>
           <form className="newsletter" onSubmit={onSubscribe}>
-            <input 
-              type="email" 
-              placeholder="Your email" 
-              aria-label="Email address" 
-              required
-            />
-            <button type="submit" className={subscribed ? 'subscribed' : ''}>
-              {subscribed ? '✓ Subscribed' : 'Subscribe'}
-            </button>
+            {subscribed ? (
+              <div style={{ background: '#d4edda', color: '#155724', padding: '12px', borderRadius: '8px', textAlign: 'center', fontWeight: 500 }}>
+                ✓ Subscribed
+              </div>
+            ) : (
+              <>
+                <input 
+                  type="email" 
+                  placeholder="Your email" 
+                  aria-label="Email address" 
+                  required
+                />
+                <button type="submit" className="btn primary">
+                  Subscribe
+                </button>
+              </>
+            )}
           </form>
         </div>
       </div>

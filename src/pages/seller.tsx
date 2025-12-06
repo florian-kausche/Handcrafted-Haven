@@ -5,14 +5,17 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SubscriptionModal from '../components/SubscriptionModal'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
+import { useSubscription } from '../contexts/SubscriptionContext'
 import { sellerAPI } from '../lib/api'
 
 export default function Seller() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [products, setProducts] = useState<any[]>([])
+  const { subscribed, subscribedEmail, showSubscriptionModal, setShowSubscriptionModal, handleSubscribe } = useSubscription()
   const [stats, setStats] = useState({ productCount: 0, totalSales: 0, rating: 0 })
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -101,7 +104,13 @@ export default function Seller() {
         <main style={{ padding: '80px 0', textAlign: 'center' }}>
           <p>Loading...</p>
         </main>
-        <Footer onSubscribe={() => {}} subscribed={false} />
+        <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+        <SubscriptionModal
+          isOpen={showSubscriptionModal}
+          email={subscribedEmail}
+          onClose={() => setShowSubscriptionModal(false)}
+        />
       </>
     )
   }
@@ -254,7 +263,13 @@ export default function Seller() {
         </div>
       </main>
 
-      <Footer onSubscribe={() => {}} subscribed={false} />
+      <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </>
   )
 }

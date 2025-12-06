@@ -5,6 +5,8 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SubscriptionModal from '../components/SubscriptionModal'
+import { useSubscription } from '../contexts/SubscriptionContext'
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -16,6 +18,7 @@ export default function Register() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { subscribed, subscribedEmail, showSubscriptionModal, setShowSubscriptionModal, handleSubscribe } = useSubscription()
   const { register } = useAuth()
   const router = useRouter()
 
@@ -152,7 +155,13 @@ export default function Register() {
         </div>
       </main>
 
-      <Footer onSubscribe={() => {}} subscribed={false} />
+      <Footer onSubscribe={handleSubscribe} subscribed={subscribed} />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        email={subscribedEmail}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </>
   )
 }
