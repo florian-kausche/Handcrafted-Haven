@@ -64,7 +64,8 @@ export default function Shop({ initialProducts = [], categories = [] }: ShopProp
 
   // Whenever selectedCategory or search changes, load products client-side
   useEffect(() => {
-    // avoid server-side forced SSR param
+    // Client-side fetch so static hosts (e.g., GitHub Pages) still render products
+    // even when SSR data isn’t available.
     if (!router.query.ssr) {
       loadProducts()
     }
