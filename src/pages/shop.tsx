@@ -259,8 +259,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     if (!conn) {
       console.warn('MongoDB not connected in getServerSideProps, returning empty')
       return { 
-        props: { initialProducts: [], categories: [] },
-        revalidate: 60 // ISR: revalidate every 60 seconds
+        props: { initialProducts: [], categories: [] }
       }
     }
 
@@ -272,13 +271,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .sort({ createdAt: -1 })
       .limit(200)
       .lean()
-      .timeout(10000) // 10 second timeout for the query
+      .maxTimeMS(10000) // 10 second timeout for the query
 
     if (!products || products.length === 0) {
       console.warn('No products found in database')
       return {
-        props: { initialProducts: [], categories: [] },
-        revalidate: 60
+        props: { initialProducts: [], categories: [] }
       }
     }
 
@@ -299,18 +297,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       { $match: {} },
       { $group: { _id: { $ifNull: ['$category', 'Uncategorized'] }, count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-    ])
+    ]).maxTimeMS(5000)
+    
     const categories = (catAgg || []).map((c: any) => ({ value: c._id, count: c.count }))
 
     return { 
-      props: { initialProducts: serialized, categories },
-      revalidate: 60 // ISR: revalidate every 60 seconds
+      props: { initialProducts: serialized, categories }
     }
   } catch (err) {
     console.error('getServerSideProps error (shop):', err)
     return { 
-      props: { initialProducts: [], categories: [] },
-      revalidate: 60 // ISR: revalidate every 60 seconds even on error
+      props: { initialProducts: [], categories: [] }
     }
   }
 }
