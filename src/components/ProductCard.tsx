@@ -1,5 +1,4 @@
 import React from 'react'
-import Image from 'next/image'
 import type { Product } from '../types'
 
 interface ProductCardProps {
@@ -11,23 +10,20 @@ interface ProductCardProps {
 export default function ProductCard({ product, onSelect, onAddToCart }: ProductCardProps) {
   const priceNumber = typeof product.price === 'number' ? product.price : parseFloat(product.price as any || '0')
   const rating = typeof product.rating === 'number' ? product.rating : (product.rating ? Number(product.rating) : 0)
+    const img = ((product.images && product.images[0]?.url) || product.image_url || product.image || '/assets/product-1.jpeg') as string
+  
   return (
     <article className="product-card">
       {product.featured && <div className="ribbon">Featured</div>}
       <div className="product-image-wrapper" onClick={() => onSelect(product)}>
-        {(() => {
-          const img = ((product.images && product.images[0]?.url) || product.image_url || product.image || '/assets/product-1.jpeg') as string
-          return (
-            <Image
-              src={img}
-              alt={product.title}
-              className="product-image"
-              width={360}
-              height={240}
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-          )
-        })()}
+          <img
+            src={img}
+            alt={product.title}
+            className="product-image"
+            loading="lazy"
+            width="360"
+            height="240"
+          />
       </div>
       <div className="product-body">
         <h3>{product.title}</h3>
