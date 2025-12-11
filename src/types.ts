@@ -7,6 +7,7 @@ export type Product = {
   // images: some endpoints use `image` and others use `image_url`
   image?: string
   image_url?: string
+  images?: Array<{ url: string; alt?: string; type?: string }>
   featured?: boolean
   description?: string
   rating?: number

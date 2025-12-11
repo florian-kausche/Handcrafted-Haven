@@ -128,7 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } else {
         const title = product.title || ''
         const price = product.price !== undefined ? String(product.price) : '0.00'
-        const image_url = (product.image_url || product.image) as string | undefined
+        const image_url = ((product.images && product.images[0]?.url) || product.image_url || product.image || '/assets/product-1.jpeg') as string
         current.push({ id: `${productId}`, product_id: productId, quantity, title, price, image_url })
       }
       saveGuestCart(current)

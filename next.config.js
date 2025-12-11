@@ -6,6 +6,8 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    // Disable image optimization for faster serverless/static hosting
+    unoptimized: true,
     // Allow images from these domains
     remotePatterns: [
       {
@@ -27,6 +29,24 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/products',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
           },
         ],
       },

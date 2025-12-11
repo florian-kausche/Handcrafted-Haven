@@ -23,13 +23,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!user) return res.status(401).json({ error: 'Not authenticated' })
 
   await connectMongoose()
+  // Ensure Product model is registered before populate (fixes serverless timing issues)
+  if (!Product) throw new Error('Product model not loaded')
 
   const userId = user.id
 
   try {
     if (req.method === 'GET') {
-      const items = await CartItem.find({ user: userId }).populate('product').sort({ createdAt: -1 }).lean()
-      const normalized = items.map((it: any) => ({ id: it._id, quantity: it.quantity, product: { id: it.product._id, title: it.product.title, price: it.product.price, image: (it.product.images && it.product.images[0]?.url) || it.product.image_url || '/assets/product-1.jpeg', stock_quantity: it.product.stock_quantity } }))
+      const items = await CartItem.find({ user: userId }).sort({ createdAt: -1 }).lean()
+      // Manually fetch products to avoid populate timing issues in serverless
+      const productIds = items.map((it: any) => it.product)
+      const products = await Product.find({ _id: { $in: productIds } }).lean()
+      const productMap = new Map(products.map((p: any) => [String(p._id), p]))
+      
+      const normalized = items.map((it: any) => {
+        const product = productMap.get(String(it.product)) || {}
+        return {
+          id: it._id,
+          quantity: it.quantity,
+          product: {
+            id: product._id || it.product,
+            title: product.title || 'Product',
+            price: product.price || 0,
+            image: (product.images && product.images[0]?.url) || product.image_url || '/assets/product-1.jpeg',
+            stock_quantity: product.stock_quantity || 0
+          }
+        }
+      })
       return res.status(200).json({ items: normalized })
     }
 

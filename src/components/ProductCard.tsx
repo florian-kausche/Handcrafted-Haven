@@ -16,7 +16,7 @@ export default function ProductCard({ product, onSelect, onAddToCart }: ProductC
       {product.featured && <div className="ribbon">Featured</div>}
       <div className="product-image-wrapper" onClick={() => onSelect(product)}>
         {(() => {
-          const img = (product.image || product.image_url || '/assets/product-1.jpeg') as string
+          const img = ((product.images && product.images[0]?.url) || product.image_url || product.image || '/assets/product-1.jpeg') as string
           return (
             <Image
               src={img}
@@ -31,7 +31,7 @@ export default function ProductCard({ product, onSelect, onAddToCart }: ProductC
       </div>
       <div className="product-body">
         <h3>{product.title}</h3>
-        <p className="by">by {product.artisanName}</p>
+        <p className="by">by {product.artisan_name || product.artisanName || 'Artisan'}</p>
         <div className="product-rating">
           {Array.from({ length: 5 }).map((_, i) => (
             <svg
