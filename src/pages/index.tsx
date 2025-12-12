@@ -38,7 +38,8 @@ const SAMPLE_PRODUCTS: Product[] = [
 export default function Home() {
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [products, setProducts] = useState<Product[]>([])
+  // Seed with sample data so the home grid renders instantly while API loads
+  const [products, setProducts] = useState<Product[]>(SAMPLE_PRODUCTS)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showCart, setShowCart] = useState(false)
   const [subscribed, setSubscribed] = useState(false)

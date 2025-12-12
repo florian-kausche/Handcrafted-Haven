@@ -80,7 +80,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const productId = (prod._id && String(prod._id)) || prod.id || it.product || it.product_id || it.productId || ''
         const title = prod.title || it.title || ''
         const price = prod.price !== undefined ? prod.price : (it.price !== undefined ? it.price : 0)
-        const image_url = (prod.images && prod.images[0]?.url) || prod.image_url || it.image_url || it.image || '/assets/product-1.jpeg'
+        const image_url =
+          (prod.images && prod.images[0]?.url) ||
+          prod.image_url ||
+          prod.image ||
+          it.image_url ||
+          it.image ||
+          '/assets/product-1.jpeg'
         const stock_quantity = prod.stock_quantity || prod.stock || it.stock_quantity || 0
 
         return {
